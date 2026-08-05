@@ -4,17 +4,24 @@ const PAYSTACK_API_KEY = process.env.PAYSTACK_SECRET_KEY
 const PAYSTACK_BASE_URL = 'https://api.paystack.co'
 const USD_TO_KES_RATE = parseFloat(process.env.USD_TO_KES_RATE || '134')
 
-if (!PAYSTACK_API_KEY) {
-  throw new Error('PAYSTACK_SECRET_KEY environment variable is not set')
-}
+// Lazy initialize Paystack client to avoid errors during build
+let paystackClient: ReturnType<typeof axios.create> | null = null
 
-const paystackClient = axios.create({
-  baseURL: PAYSTACK_BASE_URL,
-  headers: {
-    Authorization: `Bearer ${PAYSTACK_API_KEY}`,
-    'Content-Type': 'application/json',
-  },
-})
+function getPaystackClient() {
+  if (!paystackClient) {
+    if (!PAYSTACK_API_KEY) {
+      throw new Error('PAYSTACK_SECRET_KEY environment variable is not set')
+    }
+    paystackClient = axios.create({
+      baseURL: PAYSTACK_BASE_URL,
+      headers: {
+        Authorization: `Bearer ${PAYSTACK_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+    })
+  }
+  return paystackClient
+}
 
 export interface InitializeTransactionPayload {
   email: string
@@ -69,7 +76,8 @@ export async function initializePaystackTransaction(
   payload: InitializeTransactionPayload,
 ): Promise<InitializeTransactionResponse> {
   try {
-    const response = await paystackClient.post<InitializeTransactionResponse>('/transaction/initialize', payload)
+    const client = getPaystackClient()
+    const response = await client.post<InitializeTransactionResponse>('/transaction/initialize', payload)
     return response.data
   } catch (error: any) {
     console.error('[Paystack] Transaction initialization error:', error.response?.data || error.message)
@@ -82,7 +90,8 @@ export async function initializePaystackTransaction(
  */
 export async function verifyPaystackTransaction(reference: string): Promise<VerifyTransactionResponse> {
   try {
-    const response = await paystackClient.get<VerifyTransactionResponse>(`/transaction/verify/${reference}`)
+    const client = getPaystackClient()
+    const response = await client.get<VerifyTransactionResponse>(`/transaction/verify/${reference}`)
     return response.data
   } catch (error: any) {
     console.error('[Paystack] Transaction verification error:', error.response?.data || error.message)
@@ -95,6 +104,9 @@ export async function verifyPaystackTransaction(reference: string): Promise<Veri
  */
 export function validatePaystackSignature(signature: string, body: string): boolean {
   const crypto = require('crypto')
+  if (!PAYSTACK_API_KEY) {
+    throw new Error('PAYSTACK_SECRET_KEY environment variable is not set')
+  }
   const hash = crypto.createHmac('sha512', PAYSTACK_API_KEY).update(body).digest('hex')
   return hash === signature
 }
