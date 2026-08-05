@@ -1,6 +1,8 @@
 import { betterAuth } from 'better-auth'
+import { APIError, createAuthMiddleware } from 'better-auth/api'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { pool, db } from './db'
+import { ensureDatabaseSchema, getUserCount } from './auth-bootstrap'
 import * as schema from './db/schema'
 
 const getOrigin = () => {
@@ -36,5 +38,22 @@ export const auth = betterAuth({
   },
   emailAndPassword: {
     enabled: true,
+  },
+  hooks: {
+    before: createAuthMiddleware(async (ctx) => {
+      if (ctx.path !== '/sign-up/email') return
+      if (!db) {
+        throw new APIError('INTERNAL_SERVER_ERROR', {
+          message: 'Database is not configured',
+        })
+      }
+
+      await ensureDatabaseSchema()
+      if ((await getUserCount()) > 0) {
+        throw new APIError('FORBIDDEN', {
+          message: 'Initial signup is closed. Please sign in instead.',
+        })
+      }
+    }),
   },
 })
