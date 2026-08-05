@@ -1,5 +1,51 @@
-import { integer, varchar, decimal, timestamp, boolean, text, pgTable } from 'drizzle-orm/pg-core'
+import { integer, varchar, decimal, timestamp, boolean, text, pgTable, index } from 'drizzle-orm/pg-core'
 
+// Better Auth Tables
+export const user = pgTable('user', {
+  id: text('id').primaryKey(),
+  email: text('email').notNull().unique(),
+  emailVerified: boolean('emailVerified').notNull().default(false),
+  name: text('name'),
+  image: text('image'),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt').notNull().defaultNow(),
+})
+
+export const session = pgTable('session', {
+  id: text('id').primaryKey(),
+  userId: text('userId').notNull(),
+  expiresAt: timestamp('expiresAt').notNull(),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt').notNull().defaultNow(),
+})
+
+export const account = pgTable(
+  'account',
+  {
+    id: text('id').primaryKey(),
+    userId: text('userId').notNull(),
+    type: text('type').notNull(),
+    provider: text('provider').notNull(),
+    providerAccountId: text('providerAccountId').notNull(),
+    password: text('password'),
+    createdAt: timestamp('createdAt').notNull().defaultNow(),
+    updatedAt: timestamp('updatedAt').notNull().defaultNow(),
+  },
+  (table) => ({
+    userIdIdx: index('account_userId_idx').on(table.userId),
+  })
+)
+
+export const verification = pgTable('verification', {
+  id: text('id').primaryKey(),
+  identifier: text('identifier').notNull(),
+  value: text('value').notNull(),
+  expiresAt: timestamp('expiresAt').notNull(),
+  createdAt: timestamp('createdAt').defaultNow(),
+  updatedAt: timestamp('updatedAt').defaultNow(),
+})
+
+// Payment System Tables
 export const paymentLinks = pgTable('payment_links', {
   id: integer('id').primaryKey(),
   customPath: varchar('custom_path', { length: 255 }).unique().notNull(),

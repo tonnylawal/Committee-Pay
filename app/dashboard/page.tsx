@@ -1,9 +1,19 @@
+import { headers } from 'next/headers'
+import { redirect } from 'next/navigation'
+import { auth } from '@/lib/auth'
 import { getPaymentLinks, getPaymentStats } from '@/app/actions/payment-links'
 import CreateLinkForm from '@/components/create-link-form'
 import PaymentLinksTable from '@/components/payment-links-table'
 import StatsOverview from '@/components/stats-overview'
+import DashboardHeader from '@/components/dashboard-header'
 
 export default async function DashboardPage() {
+  const session = await auth.api.getSession({ headers: await headers() })
+  
+  if (!session?.user) {
+    redirect('/sign-in')
+  }
+
   const links = await getPaymentLinks()
   const stats = await getPaymentStats()
 
@@ -11,10 +21,7 @@ export default async function DashboardPage() {
     <main className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-slate-900 mb-2">Payment Links Dashboard</h1>
-          <p className="text-slate-600">Create and manage payment links for your customers</p>
-        </div>
+        <DashboardHeader user={session.user} />
 
         {/* Stats Overview */}
         <StatsOverview stats={stats} />
