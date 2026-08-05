@@ -14,7 +14,10 @@ export const user = pgTable('user', {
 export const session = pgTable('session', {
   id: text('id').primaryKey(),
   userId: text('userId').notNull(),
+  token: text('token').notNull().unique(),
   expiresAt: timestamp('expiresAt').notNull(),
+  ipAddress: text('ipAddress'),
+  userAgent: text('userAgent'),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
   updatedAt: timestamp('updatedAt').notNull().defaultNow(),
 })
@@ -24,9 +27,14 @@ export const account = pgTable(
   {
     id: text('id').primaryKey(),
     userId: text('userId').notNull(),
-    type: text('type').notNull(),
-    provider: text('provider').notNull(),
-    providerAccountId: text('providerAccountId').notNull(),
+    accountId: text('accountId').notNull(),
+    providerId: text('providerId').notNull(),
+    accessToken: text('accessToken'),
+    refreshToken: text('refreshToken'),
+    idToken: text('idToken'),
+    accessTokenExpiresAt: timestamp('accessTokenExpiresAt'),
+    refreshTokenExpiresAt: timestamp('refreshTokenExpiresAt'),
+    scope: text('scope'),
     password: text('password'),
     createdAt: timestamp('createdAt').notNull().defaultNow(),
     updatedAt: timestamp('updatedAt').notNull().defaultNow(),
