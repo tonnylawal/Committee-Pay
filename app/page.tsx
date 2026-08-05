@@ -1,11 +1,14 @@
 import Link from 'next/link'
+import Image from 'next/image'
 
 export default function Page() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
       <div className="text-center max-w-lg">
-        <h1 className="text-5xl font-bold text-slate-900 mb-4">Paystack Payment Links</h1>
-        <p className="text-xl text-slate-600 mb-8">
+        <Image src="/logo.png" alt="Alghahim Pay" width={120} height={120} className="h-28 w-auto mx-auto mb-6" />
+        <h1 className="text-4xl font-bold text-slate-900 mb-2">Alghahim Pay</h1>
+        <p className="text-lg text-blue-600 font-semibold mb-4">Pay • Secure • Grow</p>
+        <p className="text-lg text-slate-600 mb-8">
           Create custom payment links that accept USD and convert silently to KES for Paystack checkout.
         </p>
 

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { authClient } from '@/lib/auth-client'
 
 interface DashboardHeaderProps {
@@ -34,10 +35,13 @@ export default function DashboardHeader({ user }: DashboardHeaderProps) {
   }
 
   return (
-    <div className="mb-8 flex items-center justify-between">
-      <div>
-        <h1 className="text-4xl font-bold text-slate-900 mb-2">Payment Links Dashboard</h1>
-        <p className="text-slate-600">Create and manage payment links for your customers</p>
+    <div className="mb-8 flex items-center justify-between border-b border-slate-200 pb-6">
+      <div className="flex items-center gap-4">
+        <Image src="/logo.png" alt="Alghahim Pay" width={60} height={60} className="h-14 w-auto" />
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900">Payment Links Dashboard</h1>
+          <p className="text-sm text-slate-600">Manage your payment links and transactions</p>
+        </div>
       </div>
       <div className="flex items-center gap-4">
         <div className="text-right">
