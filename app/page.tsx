@@ -1,47 +1,49 @@
+import Link from 'next/link'
+
 export default function Page() {
   return (
-    <main
-      style={{
-        colorScheme: 'light dark',
-        position: 'relative',
-        display: 'flex',
-        minHeight: '100vh',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: 'light-dark(#fff, #000)',
-        color: 'light-dark(#000, #fff)',
-      }}
-    >
-      <svg
-        aria-hidden="true"
-        style={{ width: 80, height: 80 }}
-        width={80}
-        height={80}
-        fill="none"
-        viewBox="0 0 20 20"
-        xmlns="http://www.w3.org/2000/svg"
-        stroke="currentColor"
-        strokeWidth="0.5"
-      >
-        <path
-          d="M14.2 14.2H17V6.9375C17 4.76288 15.2371 3 13.0625 3H5.8V5.8M14.2 14.2V7.79063L7.79062 14.2H14.2ZM14.2 14.2V17H6.9375C4.76288 17 3 15.2371 3 13.0625V5.8H5.8M5.8 5.8V12.2313L12.2313 5.8H5.8Z"
-          strokeLinejoin="round"
-        />
-      </svg>
-      <p
-        style={{
-          position: 'absolute',
-          left: '50%',
-          top: 'calc(50% + 56px)',
-          transform: 'translateX(-50%)',
-          whiteSpace: 'nowrap',
-          fontSize: '14px',
-          fontWeight: 500,
-          color: 'light-dark(#71717a, #a1a1aa)',
-        }}
-      >
-        Your v0 generation will show here.
-      </p>
+    <main className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
+      <div className="text-center max-w-lg">
+        <h1 className="text-5xl font-bold text-slate-900 mb-4">Paystack Payment Links</h1>
+        <p className="text-xl text-slate-600 mb-8">
+          Create custom payment links that accept USD and convert silently to KES for Paystack checkout.
+        </p>
+
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <Link
+            href="/dashboard"
+            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg transition"
+          >
+            Go to Dashboard
+          </Link>
+          <a
+            href="#features"
+            className="bg-slate-200 hover:bg-slate-300 text-slate-900 font-semibold py-3 px-8 rounded-lg transition"
+          >
+            Learn More
+          </a>
+        </div>
+
+        <div id="features" className="mt-16 grid md:grid-cols-3 gap-8">
+          <div className="bg-white rounded-lg border border-slate-200 p-6 shadow-sm">
+            <div className="text-3xl mb-3">🔗</div>
+            <h3 className="font-semibold text-slate-900 mb-2">Custom Links</h3>
+            <p className="text-sm text-slate-600">Create unlimited payment links with custom paths and descriptions.</p>
+          </div>
+
+          <div className="bg-white rounded-lg border border-slate-200 p-6 shadow-sm">
+            <div className="text-3xl mb-3">💱</div>
+            <h3 className="font-semibold text-slate-900 mb-2">Silent Conversion</h3>
+            <p className="text-sm text-slate-600">USD amounts shown to users, silently converted to KES for Paystack.</p>
+          </div>
+
+          <div className="bg-white rounded-lg border border-slate-200 p-6 shadow-sm">
+            <div className="text-3xl mb-3">📊</div>
+            <h3 className="font-semibold text-slate-900 mb-2">Track Payments</h3>
+            <p className="text-sm text-slate-600">Monitor all payments with detailed status and transaction history.</p>
+          </div>
+        </div>
+      </div>
     </main>
   )
 }
