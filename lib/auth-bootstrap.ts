@@ -22,16 +22,24 @@ export async function ensureDatabaseSchema() {
     CREATE TABLE IF NOT EXISTS "session" (
       "id" text PRIMARY KEY,
       "userId" text NOT NULL,
+      "token" text NOT NULL UNIQUE,
       "expiresAt" timestamp NOT NULL,
+      "ipAddress" text,
+      "userAgent" text,
       "createdAt" timestamp NOT NULL DEFAULT now(),
       "updatedAt" timestamp NOT NULL DEFAULT now()
     );
     CREATE TABLE IF NOT EXISTS "account" (
       "id" text PRIMARY KEY,
       "userId" text NOT NULL,
-      "type" text NOT NULL,
-      "provider" text NOT NULL,
-      "providerAccountId" text NOT NULL,
+      "accountId" text NOT NULL,
+      "providerId" text NOT NULL,
+      "accessToken" text,
+      "refreshToken" text,
+      "idToken" text,
+      "accessTokenExpiresAt" timestamp,
+      "refreshTokenExpiresAt" timestamp,
+      "scope" text,
       "password" text,
       "createdAt" timestamp NOT NULL DEFAULT now(),
       "updatedAt" timestamp NOT NULL DEFAULT now()
@@ -44,6 +52,22 @@ export async function ensureDatabaseSchema() {
       "createdAt" timestamp DEFAULT now(),
       "updatedAt" timestamp DEFAULT now()
     );
+    ALTER TABLE "session" ADD COLUMN IF NOT EXISTS "token" text;
+    ALTER TABLE "session" ADD COLUMN IF NOT EXISTS "ipAddress" text;
+    ALTER TABLE "session" ADD COLUMN IF NOT EXISTS "userAgent" text;
+    ALTER TABLE "account" ADD COLUMN IF NOT EXISTS "accountId" text;
+    ALTER TABLE "account" ADD COLUMN IF NOT EXISTS "providerId" text;
+    ALTER TABLE "account" ADD COLUMN IF NOT EXISTS "providerAccountId" text;
+    ALTER TABLE "account" ADD COLUMN IF NOT EXISTS "provider" text;
+    ALTER TABLE "account" ADD COLUMN IF NOT EXISTS "accessToken" text;
+    ALTER TABLE "account" ADD COLUMN IF NOT EXISTS "refreshToken" text;
+    ALTER TABLE "account" ADD COLUMN IF NOT EXISTS "idToken" text;
+    ALTER TABLE "account" ADD COLUMN IF NOT EXISTS "accessTokenExpiresAt" timestamp;
+    ALTER TABLE "account" ADD COLUMN IF NOT EXISTS "refreshTokenExpiresAt" timestamp;
+    ALTER TABLE "account" ADD COLUMN IF NOT EXISTS "scope" text;
+    UPDATE "account" SET "accountId" = COALESCE("accountId", "providerAccountId") WHERE "accountId" IS NULL;
+    UPDATE "account" SET "providerId" = COALESCE("providerId", "provider") WHERE "providerId" IS NULL;
+    UPDATE "session" SET "token" = COALESCE("token", "id") WHERE "token" IS NULL;
   `).then(() => undefined)
 
   await schemaPromise
@@ -51,10 +75,6 @@ export async function ensureDatabaseSchema() {
 
 export async function getUserCount() {
   await ensureDatabaseSchema()
-
-  if (!db) {
-    throw new Error('Database is not configured')
-  }
 
   if (!db) {
     throw new Error('Database is not configured')
