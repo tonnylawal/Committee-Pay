@@ -50,11 +50,11 @@ export default function StatsOverview({ stats }: StatsOverviewProps) {
   ]
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
       {statCards.map((card, index) => (
-        <div key={index} className={`${card.color} border rounded-lg p-6`}>
-          <p className="text-sm font-medium text-slate-600 mb-2">{card.label}</p>
-          <p className={`text-3xl font-bold ${card.textColor}`}>{card.value}</p>
+        <div key={index} className={`${card.color} border rounded-lg p-3 sm:p-4 md:p-6`}>
+          <p className="text-xs sm:text-sm font-medium text-slate-600 mb-1 sm:mb-2 truncate">{card.label}</p>
+          <p className={`text-lg sm:text-2xl md:text-3xl font-bold ${card.textColor} truncate`}>{card.value}</p>
         </div>
       ))}
     </div>

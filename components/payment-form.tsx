@@ -169,15 +169,15 @@ export default function PaymentForm({ link }: PaymentFormProps) {
   }
 
   return (
-    <div className="bg-white rounded-lg border border-slate-200 p-8 shadow-sm max-w-md w-full">
+    <div className="bg-white rounded-lg border border-slate-200 p-4 sm:p-6 md:p-8 shadow-sm max-w-md w-full">
       {/* Header */}
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-slate-900 mb-2">Payment</h1>
-        {link.description && <p className="text-slate-600">{link.description}</p>}
+      <div className="text-center mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-2">Payment</h1>
+        {link.description && <p className="text-sm sm:text-base text-slate-600">{link.description}</p>}
       </div>
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
         {(() => {
           const amountType = link.amount_type || (link.is_flexible_amount ? 'flexible' : 'fixed')
           const minAmount = link.minimum_amount_usd || 20
@@ -185,14 +185,14 @@ export default function PaymentForm({ link }: PaymentFormProps) {
           if (amountType === 'fixed') {
             return (
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Amount (USD)</label>
+                <label className="block text-xs sm:text-sm font-medium text-slate-700 mb-2">Amount (USD)</label>
                 <div className="relative">
-                  <span className="absolute left-4 top-2 text-slate-900 font-semibold">$</span>
+                  <span className="absolute left-3 sm:left-4 top-2 sm:top-3 text-slate-900 font-semibold">$</span>
                   <input
                     type="text"
                     value={link.amount_usd?.toFixed(2)}
                     disabled
-                    className="w-full pl-8 pr-4 py-3 border border-slate-300 rounded-md text-slate-900 bg-slate-50 font-semibold text-lg"
+                    className="w-full pl-7 sm:pl-8 pr-3 sm:pr-4 py-2 sm:py-3 border border-slate-300 rounded-md text-slate-900 bg-slate-50 font-semibold text-base sm:text-lg"
                   />
                 </div>
               </div>
@@ -200,11 +200,11 @@ export default function PaymentForm({ link }: PaymentFormProps) {
           } else {
             return (
               <div>
-                <label htmlFor="amount" className="block text-sm font-medium text-slate-700 mb-2">
+                <label htmlFor="amount" className="block text-xs sm:text-sm font-medium text-slate-700 mb-2">
                   Amount (USD) *
                 </label>
                 <div className="relative">
-                  <span className="absolute left-4 top-2 text-slate-900 font-semibold">$</span>
+                  <span className="absolute left-3 sm:left-4 top-2 sm:top-2 text-slate-900 font-semibold">$</span>
                   <input
                     id="amount"
                     type="number"
@@ -214,7 +214,7 @@ export default function PaymentForm({ link }: PaymentFormProps) {
                     disabled={loading}
                     step="0.01"
                     min={minAmount}
-                    className="w-full pl-8 pr-4 py-2 border border-slate-300 rounded-md text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-slate-100"
+                    className="w-full pl-7 sm:pl-8 pr-3 sm:pr-4 py-2 border border-slate-300 rounded-md text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-slate-100 text-sm sm:text-base"
                   />
                 </div>
                 <p className="mt-1 text-xs text-slate-500">Minimum: ${minAmount.toFixed(2)}</p>
@@ -225,7 +225,7 @@ export default function PaymentForm({ link }: PaymentFormProps) {
 
 
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-2">
+          <label htmlFor="email" className="block text-xs sm:text-sm font-medium text-slate-700 mb-2">
             Email Address *
           </label>
           <input
@@ -236,16 +236,16 @@ export default function PaymentForm({ link }: PaymentFormProps) {
             onChange={handleEmailChange}
             required
             disabled={loading}
-            className="w-full px-4 py-2 border border-slate-300 rounded-md text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-slate-100"
+            className="w-full px-3 sm:px-4 py-2 border border-slate-300 rounded-md text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-slate-100 text-sm sm:text-base"
           />
         </div>
 
-        {error && <div className="bg-red-50 border border-red-200 text-red-800 p-3 rounded-md text-sm">{error}</div>}
+        {error && <div className="bg-red-50 border border-red-200 text-red-800 p-2 sm:p-3 rounded-md text-xs sm:text-sm">{error}</div>}
 
         <button
           type="submit"
           disabled={loading || (!email) || ((link.amount_type || link.is_flexible_amount) && !amountUsd)}
-          className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-400 text-white font-semibold py-3 px-4 rounded-md transition duration-200"
+          className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-400 text-white font-semibold py-2 sm:py-3 px-3 sm:px-4 rounded-md transition duration-200 text-sm sm:text-base"
         >
           {(() => {
             const amountType = link.amount_type || (link.is_flexible_amount ? 'flexible' : 'fixed')
@@ -259,7 +259,7 @@ export default function PaymentForm({ link }: PaymentFormProps) {
       </form>
 
       {/* Footer */}
-      <p className="text-xs text-slate-500 text-center mt-6">
+      <p className="text-xs text-slate-500 text-center mt-4 sm:mt-6 leading-relaxed">
         Secure payment processing. Your payment information is encrypted and secure.
       </p>
     </div>

@@ -89,8 +89,8 @@ export default function PaymentLinksTable({ links }: PaymentLinksTableProps) {
 
   if (links.length === 0) {
     return (
-      <div className="bg-white rounded-lg border border-slate-200 p-12 shadow-sm text-center">
-        <p className="text-slate-600">No payment links created yet. Create one to get started!</p>
+      <div className="bg-white rounded-lg border border-slate-200 p-6 sm:p-12 shadow-sm text-center">
+        <p className="text-sm sm:text-base text-slate-600">No payment links created yet. Create one to get started!</p>
       </div>
     )
   }
@@ -99,48 +99,48 @@ export default function PaymentLinksTable({ links }: PaymentLinksTableProps) {
     <>
       <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full min-w-max sm:min-w-full">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-700">Path</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-700">Type & Amount</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-700">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-700">Created</th>
-                <th className="px-6 py-3 text-right text-xs font-semibold text-slate-700">Actions</th>
+                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-semibold text-slate-700">Path</th>
+                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-semibold text-slate-700">Type & Amount</th>
+                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-semibold text-slate-700 hidden sm:table-cell">Status</th>
+                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-semibold text-slate-700 hidden md:table-cell">Created</th>
+                <th className="px-3 sm:px-6 py-2 sm:py-3 text-right text-xs font-semibold text-slate-700">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200">
               {links.map((link) => (
                 <tr key={link.id} className="hover:bg-slate-50 transition">
-                  <td className="px-6 py-4">
+                  <td className="px-3 sm:px-6 py-3 sm:py-4">
                     <div className="flex items-center gap-2">
                       <div>
-                        <p className="font-medium text-slate-900">{link.customPath}</p>
-                        {link.description && <p className="text-xs text-slate-500 mt-1">{link.description}</p>}
+                        <p className="font-medium text-xs sm:text-sm text-slate-900 truncate">{link.customPath}</p>
+                        {link.description && <p className="text-xs text-slate-500 mt-1 line-clamp-1">{link.description}</p>}
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-3 sm:px-6 py-3 sm:py-4">
                     {(() => {
                       const amountType = link.amount_type || (link.amount_usd ? 'fixed' : 'flexible')
                       if (amountType === 'fixed') {
                         return (
                           <div>
                             <span className="inline-block px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded mb-1">Fixed</span>
-                            <p className="font-semibold text-slate-900">${link.amount_usd?.toFixed(2)}</p>
+                            <p className="font-semibold text-xs sm:text-sm text-slate-900">${link.amount_usd?.toFixed(2)}</p>
                           </div>
                         )
                       } else {
                         return (
                           <div>
                             <span className="inline-block px-2 py-1 text-xs font-medium bg-purple-100 text-purple-800 rounded mb-1">Flexible</span>
-                            <p className="text-sm text-slate-600">Min: ${(link.minimum_amount_usd || 20).toFixed(2)}</p>
+                            <p className="text-xs text-slate-600">Min: ${(link.minimum_amount_usd || 20).toFixed(2)}</p>
                           </div>
                         )
                       }
                     })()}
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-3 sm:px-6 py-3 sm:py-4 hidden sm:table-cell">
                     <span
                       className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${
                         link.is_active
@@ -151,26 +151,26 @@ export default function PaymentLinksTable({ links }: PaymentLinksTableProps) {
                       {link.is_active ? 'Active' : 'Inactive'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm text-slate-600" suppressHydrationWarning>
+                  <td className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-slate-600 hidden md:table-cell" suppressHydrationWarning>
                     {formatDate(link.created_at as string)}
                   </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-end gap-2">
+                  <td className="px-3 sm:px-6 py-3 sm:py-4 text-right">
+                    <div className="flex items-center justify-end gap-1 sm:gap-2 flex-wrap">
                       <button
                         onClick={() => handleCopyLink(link.custom_path)}
-                        className="px-3 py-1 text-xs bg-blue-100 hover:bg-blue-200 text-blue-900 rounded transition"
+                        className="px-2 sm:px-3 py-1 text-xs bg-blue-100 hover:bg-blue-200 text-blue-900 rounded transition"
                       >
                         Copy
                       </button>
                       <button
                         onClick={() => setEditingLink(link)}
-                        className="px-3 py-1 text-xs bg-slate-100 hover:bg-slate-200 text-slate-900 rounded transition"
+                        className="px-2 sm:px-3 py-1 text-xs bg-slate-100 hover:bg-slate-200 text-slate-900 rounded transition hidden sm:inline-block"
                       >
                         Edit
                       </button>
                       <button
                         onClick={() => handleViewPayments(link)}
-                        className="px-3 py-1 text-xs bg-slate-100 hover:bg-slate-200 text-slate-900 rounded transition"
+                        className="px-2 sm:px-3 py-1 text-xs bg-slate-100 hover:bg-slate-200 text-slate-900 rounded transition hidden md:inline-block"
                       >
                         Payments
                       </button>
@@ -178,7 +178,7 @@ export default function PaymentLinksTable({ links }: PaymentLinksTableProps) {
                         <button
                           onClick={() => handleDisable(link.id)}
                           disabled={loading}
-                          className="px-3 py-1 text-xs bg-red-100 hover:bg-red-200 text-red-900 rounded transition"
+                          className="px-2 sm:px-3 py-1 text-xs bg-red-100 hover:bg-red-200 text-red-900 rounded transition"
                         >
                           Disable
                         </button>
@@ -186,7 +186,7 @@ export default function PaymentLinksTable({ links }: PaymentLinksTableProps) {
                         <button
                           onClick={() => handleActivate(link.id)}
                           disabled={loading}
-                          className="px-3 py-1 text-xs bg-green-100 hover:bg-green-200 text-green-900 rounded transition"
+                          className="px-2 sm:px-3 py-1 text-xs bg-green-100 hover:bg-green-200 text-green-900 rounded transition"
                         >
                           Activate
                         </button>
