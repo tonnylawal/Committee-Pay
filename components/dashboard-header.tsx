@@ -3,13 +3,15 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
+import { createClient } from '@/lib/supabase/client'
 
 interface DashboardHeaderProps {
   user: {
     id: string
     email: string
-    name?: string | null
-    image?: string | null
+    user_metadata?: {
+      name?: string
+    }
   }
 }
 
@@ -20,11 +22,10 @@ export default function DashboardHeader({ user }: DashboardHeaderProps) {
   const handleSignOut = async () => {
     setSigningOut(true)
     try {
-      await fetch('/api/auth/sign-out', { method: 'POST' })
+      const supabase = createClient()
+      await supabase.auth.signOut()
       router.push('/')
       router.refresh()
-    } catch (error) {
-      console.error('Sign out error:', error)
     } finally {
       setSigningOut(false)
     }

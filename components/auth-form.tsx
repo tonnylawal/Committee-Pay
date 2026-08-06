@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/auth-client'
+import { createClient } from '@/lib/supabase/client'
 
 interface AuthFormProps {
   mode: 'sign-in' | 'sign-up'
@@ -22,73 +22,41 @@ export default function AuthForm({ mode }: AuthFormProps) {
 
     try {
       const supabase = createClient()
-      console.log('[v0] Supabase client created')
 
       if (mode === 'sign-in') {
-        console.log('[v0] Attempting sign-in with email:', email)
-        const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        const { error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
-        })
-
-        console.log('[v0] Sign in response:', { 
-          hasData: !!data, 
-          hasSession: !!data?.session,
-          error: signInError?.message 
         })
 
         if (signInError) {
-          console.log('[v0] Sign in error:', signInError.message)
           setError(signInError.message || 'Sign in failed')
-          setLoading(false)
-          return
+        } else {
+          router.push('/dashboard')
+          router.refresh()
         }
-
-        if (!data?.session) {
-          console.log('[v0] No session returned')
-          setError('Sign in failed - no session created')
-          setLoading(false)
-          return
-        }
-
-        console.log('[v0] Session created, waiting for cookies to be set...')
-        // Wait for cookies to be set before redirecting
-        await new Promise(resolve => setTimeout(resolve, 800))
-        console.log('[v0] Redirecting to dashboard')
-        router.push('/dashboard')
-        router.refresh()
       } else {
-        console.log('[v0] Attempting sign-up with email:', email)
-        const { error: signUpError, data: signUpData } = await supabase.auth.signUp({
+        const { error: signUpError } = await supabase.auth.signUp({
           email,
           password,
           options: {
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
             data: {
-              display_name: email.split('@')[0],
+              name: email.split('@')[0],
             },
           },
         })
 
-        console.log('[v0] Sign up response:', { 
-          hasData: !!signUpData,
-          error: signUpError?.message 
-        })
-
         if (signUpError) {
-          console.log('[v0] Sign up error:', signUpError.message)
           setError(signUpError.message || 'Sign up failed')
-          setLoading(false)
-          return
+        } else {
+          router.push('/dashboard')
+          router.refresh()
         }
-
-        console.log('[v0] Sign up successful, redirecting to dashboard')
-        await new Promise(resolve => setTimeout(resolve, 800))
-        router.push('/dashboard')
-        router.refresh()
       }
     } catch (err: any) {
-      console.log('[v0] Catch error:', err.message)
       setError(err.message || 'An error occurred')
+    } finally {
       setLoading(false)
     }
   }

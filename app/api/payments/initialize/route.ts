@@ -6,49 +6,43 @@ import { convertUsdToKes, initializePaystackTransaction } from '@/lib/paystack'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { customPath, email } = body
+    const { customPath, email, amountUsd } = body
 
     // Validation
-    if (!customPath || !email) {
-      return NextResponse.json({ error: 'Missing required fields: customPath, email' }, { status: 400 })
+    if (!customPath || !email || !amountUsd) {
+      return NextResponse.json({ error: 'Missing required fields: customPath, email, amountUsd' }, { status: 400 })
     }
 
+    const amount = parseFloat(amountUsd)
+    if (amount <= 0) {
+      return NextResponse.json({ error: 'Amount must be greater than 0' }, { status: 400 })
+    }
+
+    // Get Supabase client
     const supabase = createServiceRoleClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
     )
 
     // Get payment link
-    const { data: linkData, error: linkError } = await supabase
+    const { data: links, error: linkError } = await supabase
       .from('payment_links')
       .select('*')
       .eq('custom_path', customPath)
       .limit(1)
 
-    if (linkError || !linkData || linkData.length === 0) {
+    if (linkError || !links || links.length === 0) {
       return NextResponse.json({ error: 'Payment link not found' }, { status: 404 })
     }
 
-    const paymentLink = linkData[0]
+    const paymentLink = links[0]
 
     if (!paymentLink.is_active) {
       return NextResponse.json({ error: 'Payment link is no longer active' }, { status: 400 })
     }
 
-    // Handle flexible amount
-    let amountUsd = paymentLink.amount_usd
-    if (paymentLink.is_flexible_amount && body.amount) {
-      amountUsd = parseFloat(body.amount)
-      if (amountUsd < paymentLink.minimum_amount_usd) {
-        return NextResponse.json(
-          { error: `Amount must be at least $${paymentLink.minimum_amount_usd}` },
-          { status: 400 },
-        )
-      }
-    }
-
-    // Convert USD to KES
-    const amountKes = convertUsdToKes(amountUsd)
+    // Convert USD to KES silently
+    const amountKes = convertUsdToKes(amount)
 
     // Create unique reference
     const reference = `${customPath}-${uuidv4().substring(0, 8)}`
@@ -61,7 +55,7 @@ export async function POST(request: NextRequest) {
       metadata: {
         customPath,
         linkId: paymentLink.id,
-        originalAmountUsd: amountUsd,
+        originalAmountUsd: parseFloat(paymentLink.amountUsd.toString()),
         conversionRate: 134,
       },
     })
@@ -72,19 +66,20 @@ export async function POST(request: NextRequest) {
     }
 
     // Record payment in database
-    const { data: payment, error: paymentError } = await supabase
+    const { error: insertError } = await supabase
       .from('payments')
       .insert({
         link_id: paymentLink.id,
         reference_id: reference,
         amount_kes: amountKes,
-        amount_usd: amountUsd,
+        amount_usd: amount,
         status: 'pending',
         customer_email: email,
       })
-      .select()
 
-    if (paymentError) throw paymentError
+    if (insertError) {
+      console.error('[API] Failed to record payment:', insertError)
+    }
 
     return NextResponse.json({
       success: true,
@@ -92,7 +87,7 @@ export async function POST(request: NextRequest) {
         authorizationUrl: paystackResponse.data.authorization_url,
         accessCode: paystackResponse.data.access_code,
         reference,
-        amountUsd,
+        amountUsd: amount,
         amountKes,
       },
     })

@@ -17,17 +17,17 @@ export async function GET(request: NextRequest) {
     )
 
     // Get payment from database
-    const { data: paymentData, error: paymentError } = await supabase
+    const { data: payments, error: fetchError } = await supabase
       .from('payments')
       .select('*')
       .eq('reference_id', reference)
       .limit(1)
 
-    if (paymentError || !paymentData || paymentData.length === 0) {
+    if (fetchError || !payments || payments.length === 0) {
       return NextResponse.json({ error: 'Payment not found' }, { status: 404 })
     }
 
-    const paymentRecord = paymentData[0]
+    const paymentRecord = payments[0]
 
     // Verify with Paystack
     const verification = await verifyPaystackTransaction(reference)
@@ -37,7 +37,10 @@ export async function GET(request: NextRequest) {
 
       // Update payment status if it changed
       if (paymentRecord.status !== status) {
-        await supabase.from('payments').update({ status }).eq('reference_id', reference)
+        await supabase
+          .from('payments')
+          .update({ status })
+          .eq('reference_id', reference)
       }
 
       return NextResponse.json({

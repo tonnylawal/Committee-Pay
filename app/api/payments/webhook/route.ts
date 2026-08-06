@@ -37,7 +37,10 @@ export async function POST(request: NextRequest) {
           process.env.SUPABASE_SERVICE_ROLE_KEY!,
         )
 
-        await supabase.from('payments').update({ status: 'completed' }).eq('reference_id', reference)
+        await supabase
+          .from('payments')
+          .update({ status: 'completed' })
+          .eq('reference_id', reference)
 
         console.log(`[Webhook] Payment completed: ${reference}`)
       }

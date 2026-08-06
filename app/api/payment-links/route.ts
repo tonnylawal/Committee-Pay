@@ -21,13 +21,13 @@ export async function POST(request: NextRequest) {
     )
 
     // Check if custom path already exists
-    const { data: existingLink } = await supabase
+    const { data: existing } = await supabase
       .from('payment_links')
       .select('*')
       .eq('custom_path', customPath)
       .limit(1)
 
-    if (existingLink && existingLink.length > 0) {
+    if (existing && existing.length > 0) {
       return NextResponse.json({ error: 'Custom path already exists' }, { status: 400 })
     }
 
@@ -38,7 +38,6 @@ export async function POST(request: NextRequest) {
         custom_path: customPath,
         amount_usd: parseFloat(amountUsd),
         description: description || null,
-        is_active: true,
       })
       .select()
 

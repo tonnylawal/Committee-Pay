@@ -1,17 +1,10 @@
 'use server'
 
-import { createClient as createServiceRoleClient } from '@supabase/supabase-js'
-
-function createSupabaseClient() {
-  return createServiceRoleClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  )
-}
+import { createClient } from '@/lib/supabase/server'
 
 export async function getPaymentLinks() {
   try {
-    const supabase = createSupabaseClient()
+    const supabase = await createClient()
     const { data, error } = await supabase
       .from('payment_links')
       .select('*')
@@ -27,22 +20,26 @@ export async function getPaymentLinks() {
 
 export async function createPaymentLink(
   customPath: string,
-  amountUsd: number,
-  description?: string,
-  amountType?: string,
+  amountType: 'fixed' | 'flexible',
+  amountUsd?: number,
   minimumAmount?: number,
+  description?: string,
 ) {
   try {
     if (!customPath || customPath.trim().length === 0) {
       throw new Error('Custom path is required')
     }
 
-    if (amountUsd <= 0 && amountType === 'fixed') {
-      throw new Error('Amount must be greater than 0')
+    if (amountType === 'fixed' && (!amountUsd || amountUsd <= 0)) {
+      throw new Error('Fixed amount must be greater than 0')
     }
 
-    const supabase = createSupabaseClient()
+    if (amountType === 'flexible' && (!minimumAmount || minimumAmount < 0.01)) {
+      throw new Error('Minimum amount must be at least $0.01')
+    }
 
+    const supabase = await createClient()
+    
     // Check if path exists
     const { data: existing } = await supabase
       .from('payment_links')
@@ -59,7 +56,7 @@ export async function createPaymentLink(
       .insert({
         custom_path: customPath,
         amount_usd: amountType === 'fixed' ? amountUsd : null,
-        amount_type: amountType || 'fixed',
+        amount_type: amountType,
         minimum_amount_usd: amountType === 'flexible' ? minimumAmount : null,
         description: description || null,
         is_flexible_amount: amountType === 'flexible',
@@ -77,11 +74,15 @@ export async function createPaymentLink(
 
 export async function updatePaymentLink(
   id: number,
-  updates: { description?: string; is_active?: boolean; amount_usd?: number },
+  updates: {
+    description?: string
+    is_active?: boolean
+    amount_usd?: number
+    minimum_amount_usd?: number
+  },
 ) {
   try {
-    const supabase = createSupabaseClient()
-
+    const supabase = await createClient()
     const { data: updated, error } = await supabase
       .from('payment_links')
       .update(updates)
@@ -98,9 +99,11 @@ export async function updatePaymentLink(
 
 export async function disablePaymentLink(id: number) {
   try {
-    const supabase = createSupabaseClient()
-
-    const { error } = await supabase.from('payment_links').update({ is_active: false }).eq('id', id)
+    const supabase = await createClient()
+    const { error } = await supabase
+      .from('payment_links')
+      .update({ is_active: false })
+      .eq('id', id)
 
     if (error) throw error
     return { success: true }
@@ -112,9 +115,11 @@ export async function disablePaymentLink(id: number) {
 
 export async function activatePaymentLink(id: number) {
   try {
-    const supabase = createSupabaseClient()
-
-    const { error } = await supabase.from('payment_links').update({ is_active: true }).eq('id', id)
+    const supabase = await createClient()
+    const { error } = await supabase
+      .from('payment_links')
+      .update({ is_active: true })
+      .eq('id', id)
 
     if (error) throw error
     return { success: true }
@@ -126,9 +131,11 @@ export async function activatePaymentLink(id: number) {
 
 export async function deletePaymentLink(id: number) {
   try {
-    const supabase = createSupabaseClient()
-
-    const { error } = await supabase.from('payment_links').delete().eq('id', id)
+    const supabase = await createClient()
+    const { error } = await supabase
+      .from('payment_links')
+      .delete()
+      .eq('id', id)
 
     if (error) throw error
     return { success: true }
@@ -140,8 +147,7 @@ export async function deletePaymentLink(id: number) {
 
 export async function getPaymentsByLinkId(linkId: number) {
   try {
-    const supabase = createSupabaseClient()
-
+    const supabase = await createClient()
     const { data, error } = await supabase
       .from('payments')
       .select('*')
@@ -158,9 +164,10 @@ export async function getPaymentsByLinkId(linkId: number) {
 
 export async function getPaymentStats() {
   try {
-    const supabase = createSupabaseClient()
-
-    const { data: allPayments, error } = await supabase.from('payments').select('*')
+    const supabase = await createClient()
+    const { data: allPayments, error } = await supabase
+      .from('payments')
+      .select('*')
 
     if (error) throw error
 
@@ -170,8 +177,8 @@ export async function getPaymentStats() {
       completed: payments.filter((p: any) => p.status === 'completed').length,
       pending: payments.filter((p: any) => p.status === 'pending').length,
       failed: payments.filter((p: any) => p.status === 'failed').length,
-      totalAmountUsd: payments.reduce((sum: number, p: any) => sum + (parseFloat(p.amount_usd) || 0), 0),
-      totalAmountKes: payments.reduce((sum: number, p: any) => sum + (parseFloat(p.amount_kes) || 0), 0),
+      totalAmountUsd: payments.reduce((sum: number, p: any) => sum + parseFloat(p.amount_usd?.toString() || '0'), 0),
+      totalAmountKes: payments.reduce((sum: number, p: any) => sum + parseFloat(p.amount_kes?.toString() || '0'), 0),
     }
 
     return stats

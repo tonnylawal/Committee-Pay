@@ -1,18 +1,17 @@
 import { redirect } from 'next/navigation'
-import { getSession, isInitialSignupAvailable } from '@/lib/auth'
+import { createClient } from '@/lib/supabase/server'
 import AuthForm from '@/components/auth-form'
 
 export const dynamic = 'force-dynamic'
 
 export default async function SignUpPage() {
-  const session = await getSession()
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
-  if (session?.user) {
+  if (user) {
     redirect('/dashboard')
-  }
-
-  if (!(await isInitialSignupAvailable())) {
-    redirect('/sign-in')
   }
 
   return (
