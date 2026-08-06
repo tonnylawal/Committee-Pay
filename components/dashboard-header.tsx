@@ -3,14 +3,15 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { authClient } from '@/lib/auth-client'
+import { createClient } from '@/lib/supabase/client'
 
 interface DashboardHeaderProps {
   user: {
     id: string
     email: string
-    name?: string
-    image?: string
+    user_metadata?: {
+      name?: string
+    }
   }
 }
 
@@ -21,14 +22,10 @@ export default function DashboardHeader({ user }: DashboardHeaderProps) {
   const handleSignOut = async () => {
     setSigningOut(true)
     try {
-      await authClient.signOut({
-        fetchOptions: {
-          onSuccess: () => {
-            router.push('/')
-            router.refresh()
-          },
-        },
-      })
+      const supabase = createClient()
+      await supabase.auth.signOut()
+      router.push('/')
+      router.refresh()
     } finally {
       setSigningOut(false)
     }

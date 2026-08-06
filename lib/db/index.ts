@@ -1,28 +1,21 @@
-import { drizzle } from 'drizzle-orm/node-postgres'
-import { Pool } from 'pg'
-import * as schema from './schema'
+import { createClient as createServiceRoleClient } from '@supabase/supabase-js'
 
 // Initialize Supabase database connection
 const initializeDatabase = () => {
-  // Use Supabase PostgreSQL URL with SSL
-  const databaseUrl = process.env.SUPABASE_POSTGRES_URL || process.env.DATABASE_URL
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   
-  if (!databaseUrl) {
-    console.error('[v0] No database URL found. Set SUPABASE_POSTGRES_URL or DATABASE_URL')
+  if (!supabaseUrl || !serviceRoleKey) {
+    console.error('[v0] Supabase URL or Service Role Key not found')
     return {
-      pool: null as any,
-      db: null as any,
+      supabase: null as any,
     }
   }
   
-  const pool = new Pool({ 
-    connectionString: databaseUrl,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-  })
-  const db = drizzle(pool, { schema })
-  return { pool, db }
+  const supabase = createServiceRoleClient(supabaseUrl, serviceRoleKey)
+  return { supabase }
 }
 
-const { pool, db } = initializeDatabase()
+const { supabase } = initializeDatabase()
 
-export { pool, db }
+export { supabase }

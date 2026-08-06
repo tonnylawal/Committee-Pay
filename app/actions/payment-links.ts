@@ -1,12 +1,17 @@
 'use server'
 
-import { db } from '@/lib/db'
-import { paymentLinks, payments } from '@/lib/db/schema'
-import { eq, desc } from 'drizzle-orm'
+import { createClient } from '@/lib/supabase/server'
 
 export async function getPaymentLinks() {
   try {
-    return await db.select().from(paymentLinks).orderBy(desc(paymentLinks.createdAt))
+    const supabase = await createClient()
+    const { data, error } = await supabase
+      .from('payment_links')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+    return data || []
   } catch (error: any) {
     console.error('[Action] Get payment links error:', error)
     throw new Error('Failed to fetch payment links')
@@ -23,23 +28,30 @@ export async function createPaymentLink(customPath: string, amountUsd: number, d
       throw new Error('Amount must be greater than 0')
     }
 
+    const supabase = await createClient()
+    
     // Check if path exists
-    const existing = await db.select().from(paymentLinks).where(eq(paymentLinks.customPath, customPath)).limit(1)
+    const { data: existing } = await supabase
+      .from('payment_links')
+      .select('*')
+      .eq('custom_path', customPath)
+      .limit(1)
 
-    if (existing.length > 0) {
+    if (existing && existing.length > 0) {
       throw new Error('This custom path already exists')
     }
 
-    const newLink = await db
-      .insert(paymentLinks)
-      .values({
-        customPath,
-        amountUsd,
+    const { data: newLink, error } = await supabase
+      .from('payment_links')
+      .insert({
+        custom_path: customPath,
+        amount_usd: amountUsd,
         description: description || null,
       })
-      .returning()
+      .select()
 
-    return newLink[0]
+    if (error) throw error
+    return newLink?.[0]
   } catch (error: any) {
     console.error('[Action] Create payment link error:', error)
     throw error
@@ -48,12 +60,18 @@ export async function createPaymentLink(customPath: string, amountUsd: number, d
 
 export async function updatePaymentLink(
   id: number,
-  updates: { description?: string; isActive?: boolean; amountUsd?: number },
+  updates: { description?: string; is_active?: boolean; amount_usd?: number },
 ) {
   try {
-    const updated = await db.update(paymentLinks).set(updates).where(eq(paymentLinks.id, id)).returning()
+    const supabase = await createClient()
+    const { data: updated, error } = await supabase
+      .from('payment_links')
+      .update(updates)
+      .eq('id', id)
+      .select()
 
-    return updated[0]
+    if (error) throw error
+    return updated?.[0]
   } catch (error: any) {
     console.error('[Action] Update payment link error:', error)
     throw new Error('Failed to update payment link')
@@ -62,8 +80,13 @@ export async function updatePaymentLink(
 
 export async function deletePaymentLink(id: number) {
   try {
-    await db.update(paymentLinks).set({ isActive: false }).where(eq(paymentLinks.id, id))
+    const supabase = await createClient()
+    const { error } = await supabase
+      .from('payment_links')
+      .update({ is_active: false })
+      .eq('id', id)
 
+    if (error) throw error
     return { success: true }
   } catch (error: any) {
     console.error('[Action] Delete payment link error:', error)
@@ -73,7 +96,15 @@ export async function deletePaymentLink(id: number) {
 
 export async function getPaymentsByLinkId(linkId: number) {
   try {
-    return await db.select().from(payments).where(eq(payments.linkId, linkId)).orderBy(desc(payments.createdAt))
+    const supabase = await createClient()
+    const { data, error } = await supabase
+      .from('payments')
+      .select('*')
+      .eq('link_id', linkId)
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+    return data || []
   } catch (error: any) {
     console.error('[Action] Get payments error:', error)
     throw new Error('Failed to fetch payments')
@@ -82,15 +113,21 @@ export async function getPaymentsByLinkId(linkId: number) {
 
 export async function getPaymentStats() {
   try {
-    const allPayments = await db.select().from(payments)
+    const supabase = await createClient()
+    const { data: allPayments, error } = await supabase
+      .from('payments')
+      .select('*')
 
+    if (error) throw error
+
+    const payments = allPayments || []
     const stats = {
-      total: allPayments.length,
-      completed: allPayments.filter((p) => p.status === 'completed').length,
-      pending: allPayments.filter((p) => p.status === 'pending').length,
-      failed: allPayments.filter((p) => p.status === 'failed').length,
-      totalAmountUsd: allPayments.reduce((sum, p) => sum + parseFloat(p.amountUsd.toString()), 0),
-      totalAmountKes: allPayments.reduce((sum, p) => sum + parseFloat(p.amountKes.toString()), 0),
+      total: payments.length,
+      completed: payments.filter((p: any) => p.status === 'completed').length,
+      pending: payments.filter((p: any) => p.status === 'pending').length,
+      failed: payments.filter((p: any) => p.status === 'failed').length,
+      totalAmountUsd: payments.reduce((sum: number, p: any) => sum + parseFloat(p.amount_usd?.toString() || '0'), 0),
+      totalAmountKes: payments.reduce((sum: number, p: any) => sum + parseFloat(p.amount_kes?.toString() || '0'), 0),
     }
 
     return stats
