@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, CreditCard, Key, Webhook, BookOpen, Plus, Users } from 'lucide-react'
+import { LayoutDashboard, CreditCard, Key, Webhook, BookOpen, Users } from 'lucide-react'
 
 const navItems = [
   {
@@ -35,11 +35,6 @@ const navItems = [
     href: '/api-docs',
     icon: BookOpen,
     external: true,
-  },
-  {
-    label: 'Create Admin',
-    href: '/sign-up',
-    icon: Plus,
   },
 ]
 
