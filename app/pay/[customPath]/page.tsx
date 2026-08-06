@@ -1,18 +1,17 @@
-import { db } from '@/lib/db'
-import { paymentLinks } from '@/lib/db/schema'
-import { eq } from 'drizzle-orm'
+import { createClient } from '@/lib/supabase/server'
 import PaymentForm from '@/components/payment-form'
 
 export default async function PaymentPage({ params }: { params: { customPath: string } }) {
   const { customPath } = await Promise.resolve(params)
 
-  const links = await db
-    .select()
-    .from(paymentLinks)
-    .where(eq(paymentLinks.customPath, customPath))
+  const supabase = await createClient()
+  const { data: links, error } = await supabase
+    .from('payment_links')
+    .select('*')
+    .eq('custom_path', customPath)
     .limit(1)
 
-  if (links.length === 0) {
+  if (error || !links || links.length === 0) {
     return (
       <main className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
         <div className="bg-white rounded-lg border border-slate-200 p-8 shadow-sm max-w-md w-full text-center">
@@ -25,7 +24,7 @@ export default async function PaymentPage({ params }: { params: { customPath: st
 
   const link = links[0]
 
-  if (!link.isActive) {
+  if (!link.is_active) {
     return (
       <main className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
         <div className="bg-white rounded-lg border border-slate-200 p-8 shadow-sm max-w-md w-full text-center">

@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
-import { payments } from '@/lib/db/schema'
-import { eq } from 'drizzle-orm'
+import { createClient as createServiceRoleClient } from '@supabase/supabase-js'
 import { validatePaystackSignature, verifyPaystackTransaction } from '@/lib/paystack'
 
 export async function POST(request: NextRequest) {
@@ -34,7 +32,15 @@ export async function POST(request: NextRequest) {
 
       if (verification.status && verification.data?.status === 'success') {
         // Update payment status
-        await db.update(payments).set({ status: 'completed' }).where(eq(payments.referenceId, reference))
+        const supabase = createServiceRoleClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        )
+
+        await supabase
+          .from('payments')
+          .update({ status: 'completed' })
+          .eq('reference_id', reference)
 
         console.log(`[Webhook] Payment completed: ${reference}`)
       }

@@ -1,15 +1,17 @@
 import Link from 'next/link'
-import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { auth } from '@/lib/auth'
+import { createClient } from '@/lib/supabase/server'
 import AuthForm from '@/components/auth-form'
 
 export const dynamic = 'force-dynamic'
 
 export default async function SignInPage() {
-  const session = await auth.api.getSession({ headers: await headers() })
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   
-  if (session?.user) {
+  if (user) {
     redirect('/dashboard')
   }
 

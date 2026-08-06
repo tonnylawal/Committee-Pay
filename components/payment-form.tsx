@@ -1,8 +1,18 @@
 'use client'
 
-import { PaymentLink } from '@/lib/db/schema'
 import { ChangeEvent, FormEvent, useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+
+interface PaymentLink {
+  id: number
+  custom_path: string
+  amount_usd: number | null
+  amount_type?: 'fixed' | 'flexible'
+  minimum_amount_usd?: number
+  description?: string
+  is_active: boolean
+  is_flexible_amount?: boolean
+}
 
 interface PaymentFormProps {
   link: PaymentLink
@@ -10,6 +20,7 @@ interface PaymentFormProps {
 
 export default function PaymentForm({ link }: PaymentFormProps) {
   const [email, setEmail] = useState('')
+  const [amountUsd, setAmountUsd] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'verifying' | 'success' | 'failed'>(
@@ -51,19 +62,43 @@ export default function PaymentForm({ link }: PaymentFormProps) {
     setError('')
   }
 
+  const handleAmountChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setAmountUsd(e.target.value)
+    setError('')
+  }
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
 
     try {
+      // Determine the amount based on link type
+      let finalAmount = 0
+      const amountType = link.amount_type || (link.is_flexible_amount ? 'flexible' : 'fixed')
+
+      if (amountType === 'fixed') {
+        finalAmount = link.amount_usd || 0
+      } else {
+        finalAmount = parseFloat(amountUsd)
+        const minAmount = link.minimum_amount_usd || 20
+        if (!finalAmount || finalAmount < minAmount) {
+          throw new Error(`Minimum amount is $${minAmount.toFixed(2)}`)
+        }
+      }
+
+      if (finalAmount <= 0) {
+        throw new Error('Please enter a valid amount')
+      }
+
       // Initialize payment
       const initResponse = await fetch('/api/payments/initialize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          customPath: link.customPath,
+          customPath: link.custom_path,
           email,
+          amountUsd: finalAmount,
         }),
       })
 
@@ -137,22 +172,61 @@ export default function PaymentForm({ link }: PaymentFormProps) {
     <div className="bg-white rounded-lg border border-slate-200 p-8 shadow-sm max-w-md w-full">
       {/* Header */}
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-slate-900 mb-2">Payment Required</h1>
+        <h1 className="text-3xl font-bold text-slate-900 mb-2">Payment</h1>
         {link.description && <p className="text-slate-600">{link.description}</p>}
-      </div>
-
-      {/* Amount Display */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8 text-center">
-        <p className="text-sm font-medium text-blue-900 mb-2">Amount Due</p>
-        <p className="text-4xl font-bold text-blue-900">${link.amountUsd}</p>
-        <p className="text-xs text-blue-700 mt-2">USD</p>
       </div>
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-4">
+        {(() => {
+          const amountType = link.amount_type || (link.is_flexible_amount ? 'flexible' : 'fixed')
+          const minAmount = link.minimum_amount_usd || 20
+
+          if (amountType === 'fixed') {
+            return (
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Amount (USD)</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-2 text-slate-900 font-semibold">$</span>
+                  <input
+                    type="text"
+                    value={link.amount_usd?.toFixed(2)}
+                    disabled
+                    className="w-full pl-8 pr-4 py-3 border border-slate-300 rounded-md text-slate-900 bg-slate-50 font-semibold text-lg"
+                  />
+                </div>
+              </div>
+            )
+          } else {
+            return (
+              <div>
+                <label htmlFor="amount" className="block text-sm font-medium text-slate-700 mb-2">
+                  Amount (USD) *
+                </label>
+                <div className="relative">
+                  <span className="absolute left-4 top-2 text-slate-900 font-semibold">$</span>
+                  <input
+                    id="amount"
+                    type="number"
+                    placeholder={minAmount.toString()}
+                    value={amountUsd}
+                    onChange={handleAmountChange}
+                    disabled={loading}
+                    step="0.01"
+                    min={minAmount}
+                    className="w-full pl-8 pr-4 py-2 border border-slate-300 rounded-md text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-slate-100"
+                  />
+                </div>
+                <p className="mt-1 text-xs text-slate-500">Minimum: ${minAmount.toFixed(2)}</p>
+              </div>
+            )
+          }
+        })()}
+
+
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-2">
-            Email Address
+            Email Address *
           </label>
           <input
             id="email"
@@ -170,10 +244,17 @@ export default function PaymentForm({ link }: PaymentFormProps) {
 
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || ((link.amount_type || link.is_flexible_amount) && !amountUsd)}
           className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-400 text-white font-semibold py-3 px-4 rounded-md transition duration-200"
         >
-          {loading ? 'Processing...' : `Pay $${link.amountUsd}`}
+          {(() => {
+            const amountType = link.amount_type || (link.is_flexible_amount ? 'flexible' : 'fixed')
+            if (loading) return 'Processing...'
+            if (amountType === 'fixed') {
+              return `Pay $${link.amount_usd?.toFixed(2)}`
+            }
+            return amountUsd ? `Pay $${parseFloat(amountUsd).toFixed(2)}` : 'Enter amount to continue'
+          })()}
         </button>
       </form>
 

@@ -1,62 +1,71 @@
 'use server'
 
-import { db } from '@/lib/db'
-import { user as userTable, account as accountTable } from '@/lib/db/schema'
-import { eq } from 'drizzle-orm'
-import { randomUUID } from 'crypto'
-import bcrypt from 'bcryptjs'
+import { createClient as createServiceRoleClient } from '@supabase/supabase-js'
 
-export async function seedAdminUser() {
+export async function resetAndCreateAdminUser() {
   try {
     const email = 'info@iicar.org'
     const password = '@IICAR1016!'  // Admin password as specified
     const name = 'Admin'
 
-    // Check if user already exists
-    const existingUser = await db
-      .select()
-      .from(userTable)
-      .where(eq(userTable.email, email))
+    console.log('[v0] Starting admin user reset for:', email)
 
-    if (existingUser.length > 0) {
-      return { success: false, message: 'Admin user already exists' }
+    // Use service role key for admin operations
+    const supabase = createServiceRoleClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+
+    // Sign up the admin user using Supabase Auth
+    // This will create the user with proper authentication
+    const { data, error } = await supabase.auth.admin.createUser({
+      email,
+      password,
+      user_metadata: {
+        name,
+      },
+      email_confirm: true,
+    })
+
+    if (error) {
+      // If user already exists, try to delete and recreate
+      if (error.message.includes('already exists')) {
+        console.log('[v0] User already exists, attempting to update')
+        
+        // Get the existing user
+        const { data: existingUsers, error: fetchError } = await supabase.auth.admin.listUsers()
+        
+        if (!fetchError && existingUsers) {
+          const existingUser = existingUsers.users.find(u => u.email === email)
+          
+          if (existingUser) {
+            // Delete the existing user
+            await supabase.auth.admin.deleteUser(existingUser.id)
+            console.log('[v0] Deleted existing user')
+            
+            // Recreate the user
+            const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
+              email,
+              password,
+              user_metadata: {
+                name,
+              },
+              email_confirm: true,
+            })
+            
+            if (createError) throw createError
+            console.log('[v0] Admin user recreated successfully')
+            return { success: true, message: 'Admin user created successfully' }
+          }
+        }
+      }
+      throw error
     }
 
-    // Hash the password using bcrypt (which Better Auth uses internally)
-    const hashedPassword = await bcrypt.hash(password, 10)
-
-    // Generate IDs
-    const userId = randomUUID()
-    const accountId = randomUUID()
-
-    // Create the user directly in the database
-    await db.insert(userTable).values({
-      id: userId,
-      email,
-      emailVerified: true,
-      name,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    })
-
-    // Create the account with hashed password using Better Auth's expected format
-    await db.insert(accountTable).values({
-      id: accountId,
-      userId,
-      type: 'email',
-      provider: 'credential',
-      providerAccountId: email,
-      password: hashedPassword,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    })
-
+    console.log('[v0] Admin user created successfully:', data.user?.id)
     return { success: true, message: 'Admin user created successfully' }
   } catch (error: any) {
-    console.error('Error seeding admin user:', error)
-    if (error?.message?.includes('already exists') || error?.message?.includes('duplicate')) {
-      return { success: false, message: 'Admin user already exists' }
-    }
-    return { success: false, message: 'Failed to create admin user: ' + error?.message }
+    console.error('[v0] Error resetting admin user:', error)
+    return { success: false, message: `Failed to create admin user: ${error?.message}` }
   }
 }

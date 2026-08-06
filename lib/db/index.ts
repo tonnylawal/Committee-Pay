@@ -1,47 +1,21 @@
-import { Signer } from '@aws-sdk/rds-signer'
-import { awsCredentialsProvider } from '@vercel/functions/oidc'
-import { drizzle } from 'drizzle-orm/node-postgres'
-import { Pool } from 'pg'
-import * as schema from './schema'
+import { createClient as createServiceRoleClient } from '@supabase/supabase-js'
 
+// Initialize Supabase database connection
 const initializeDatabase = () => {
-  const host = process.env.PGHOST
-  const user = process.env.PGUSER
-
-  if (host && user && process.env.AWS_REGION && process.env.AWS_ROLE_ARN) {
-    const port = Number(process.env.PGPORT ?? 5432)
-    const signer = new Signer({
-      hostname: host,
-      port,
-      username: user,
-      region: process.env.AWS_REGION,
-      credentials: awsCredentialsProvider({
-        roleArn: process.env.AWS_ROLE_ARN,
-        clientConfig: { region: process.env.AWS_REGION },
-      }),
-    })
-
-    const pool = new Pool({
-      host,
-      port,
-      user,
-      database: process.env.PGDATABASE,
-      ssl: { rejectUnauthorized: false },
-      password: () => signer.getAuthToken(),
-    })
-    const db = drizzle(pool, { schema })
-    return { pool, db }
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  
+  if (!supabaseUrl || !serviceRoleKey) {
+    console.error('[v0] Supabase URL or Service Role Key not found')
+    return {
+      supabase: null as any,
+    }
   }
-
-  if (process.env.DATABASE_URL?.startsWith('postgres')) {
-    const pool = new Pool({ connectionString: process.env.DATABASE_URL })
-    const db = drizzle(pool, { schema })
-    return { pool, db }
-  }
-
-  return { pool: null as any, db: null as any }
+  
+  const supabase = createServiceRoleClient(supabaseUrl, serviceRoleKey)
+  return { supabase }
 }
 
-const { pool, db } = initializeDatabase()
+const { supabase } = initializeDatabase()
 
-export { pool, db }
+export { supabase }
