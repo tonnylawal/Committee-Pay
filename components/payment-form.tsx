@@ -244,7 +244,7 @@ export default function PaymentForm({ link }: PaymentFormProps) {
 
         <button
           type="submit"
-          disabled={loading || ((link.amount_type || link.is_flexible_amount) && !amountUsd)}
+          disabled={loading || (!email) || ((link.amount_type || link.is_flexible_amount) && !amountUsd)}
           className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-400 text-white font-semibold py-3 px-4 rounded-md transition duration-200"
         >
           {(() => {
