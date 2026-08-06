@@ -1,8 +1,10 @@
+import Link from 'next/link'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
-import Link from 'next/link'
 import { auth } from '@/lib/auth'
 import AuthForm from '@/components/auth-form'
+
+export const dynamic = 'force-dynamic'
 
 export default async function SignInPage() {
   const session = await auth.api.getSession({ headers: await headers() })
@@ -19,15 +21,12 @@ export default async function SignInPage() {
           <p className="text-center text-slate-600 mb-8">Sign in to manage payment links</p>
           
           <AuthForm mode="sign-in" />
-
-          <div className="mt-6 text-center">
-            <p className="text-slate-600 text-sm">
-              Don&apos;t have an account?{' '}
-              <Link href="/sign-up" className="text-blue-600 hover:text-blue-700 font-semibold">
-                Sign up here
-              </Link>
-            </p>
-          </div>
+          <p className="text-center text-sm text-slate-500 mt-6">
+            First-time setup?{' '}
+            <Link href="/sign-up" className="font-medium text-blue-600 hover:text-blue-700">
+              Create the administrator account
+            </Link>
+          </p>
         </div>
       </div>
     </main>
