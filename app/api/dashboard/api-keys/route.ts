@@ -62,6 +62,12 @@ export async function POST(request: NextRequest) {
 
     // Generate API key
     const { key: fullKey, preview, hash } = generateApiKey()
+    console.log('[v0] Generated API key:', {
+      preview,
+      format: `ap_live_[${preview.split('...')[0].length}...${preview.split('...')[1].length}]`,
+      userId: user.id,
+      name,
+    })
 
     // Store hashed key in database
     const { data, error } = await supabase
@@ -74,14 +80,25 @@ export async function POST(request: NextRequest) {
         product_slug: product_slug || null,
         rate_limit_per_hour: rate_limit_per_hour || 1000,
         permissions: ['read:payment_links', 'create:payment_links', 'update:payment_links', 'delete:payment_links', 'read:payments', 'webhook:register'],
+        is_active: true,
       })
       .select()
       .single()
 
     if (error) {
-      console.error('Error creating API key:', error)
-      return NextResponse.json({ error: 'Failed to create API key' }, { status: 500 })
+      console.error('[v0] Error creating API key in database:', {
+        error: error.message,
+        details: error.details,
+        code: error.code,
+      })
+      return NextResponse.json({ error: 'Failed to create API key', details: error.message }, { status: 500 })
     }
+
+    console.log('[v0] API key successfully created and stored:', {
+      id: data.id,
+      name: data.name,
+      preview: data.key_preview,
+    })
 
     // Return full key only once
     return NextResponse.json(
@@ -92,6 +109,7 @@ export async function POST(request: NextRequest) {
         full_key: fullKey,
         product_slug: data.product_slug,
         created_at: data.created_at,
+        message: 'API key created successfully. Save this key - you won\'t see it again!',
       },
       { status: 201 },
     )

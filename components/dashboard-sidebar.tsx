@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, CreditCard, Key, Webhook, BookOpen, Plus } from 'lucide-react'
+import { LayoutDashboard, CreditCard, Key, Webhook, BookOpen, Plus, Users } from 'lucide-react'
 
 const navItems = [
   {
@@ -14,6 +14,11 @@ const navItems = [
     label: 'Transactions',
     href: '/dashboard/transactions',
     icon: LayoutDashboard,
+  },
+  {
+    label: 'Users',
+    href: '/dashboard/users',
+    icon: Users,
   },
   {
     label: 'API Keys',
