@@ -1,10 +1,6 @@
 'use server'
 
-import { db, pool } from '@/lib/db'
-import { user as userTable, account as accountTable } from '@/lib/db/schema'
-import { eq, sql } from 'drizzle-orm'
-import bcrypt from 'bcryptjs'
-import { randomUUID } from 'crypto'
+import { createClient } from '@/lib/supabase/server'
 
 export async function resetAndCreateAdminUser() {
   try {
@@ -14,63 +10,55 @@ export async function resetAndCreateAdminUser() {
 
     console.log('[v0] Starting admin user reset for:', email)
 
-    // First, delete any existing user with this email
-    const existingUser = await db
-      .select()
-      .from(userTable)
-      .where(eq(userTable.email, email))
+    const supabase = await createClient()
 
-    if (existingUser.length > 0) {
-      const userId = existingUser[0].id
-      
-      // Delete all accounts associated with this user
-      await db
-        .delete(accountTable)
-        .where(eq(accountTable.userId, userId))
-      
-      // Delete the user
-      await db
-        .delete(userTable)
-        .where(eq(userTable.id, userId))
-      
-      console.log('[v0] Deleted existing user:', email)
-    }
-
-    // Hash password using bcryptjs (12 rounds)
-    const passwordHash = await bcrypt.hash(password, 12)
-    console.log('[v0] Password hashed')
-
-    // Create user
-    const userId = randomUUID()
-    const now = new Date()
-    
-    await db.insert(userTable).values({
-      id: userId,
+    // Sign up the admin user using Supabase Auth
+    // This will create the user with proper authentication
+    const { data, error } = await supabase.auth.admin.createUser({
       email,
-      emailVerified: true,
-      name,
-      createdAt: now,
-      updatedAt: now,
+      password,
+      user_metadata: {
+        name,
+      },
+      email_confirm: true,
     })
-    console.log('[v0] User created:', userId)
 
-    // Create credential account using raw SQL to avoid Drizzle's strict typing
-    // Better Auth expects accountId to be the email for credential provider
-    const accountId = randomUUID()
-    
-    if (!pool) {
-      throw new Error('Database pool is not available')
+    if (error) {
+      // If user already exists, try to delete and recreate
+      if (error.message.includes('already exists')) {
+        console.log('[v0] User already exists, attempting to update')
+        
+        // Get the existing user
+        const { data: existingUsers, error: fetchError } = await supabase.auth.admin.listUsers()
+        
+        if (!fetchError && existingUsers) {
+          const existingUser = existingUsers.users.find(u => u.email === email)
+          
+          if (existingUser) {
+            // Delete the existing user
+            await supabase.auth.admin.deleteUser(existingUser.id)
+            console.log('[v0] Deleted existing user')
+            
+            // Recreate the user
+            const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
+              email,
+              password,
+              user_metadata: {
+                name,
+              },
+              email_confirm: true,
+            })
+            
+            if (createError) throw createError
+            console.log('[v0] Admin user recreated successfully')
+            return { success: true, message: 'Admin user created successfully' }
+          }
+        }
+      }
+      throw error
     }
 
-    // Use raw SQL to insert with the fields needed
-    // The actual database schema requires: id, userId, provider, providerAccountId, type, password
-    await pool.query(
-      `INSERT INTO account (id, "userId", provider, "providerAccountId", type, password, "createdAt", "updatedAt")
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-      [accountId, userId, 'credential', email, 'credential', passwordHash, now, now]
-    )
-    console.log('[v0] Account created:', accountId)
-
+    console.log('[v0] Admin user created successfully:', data.user?.id)
     return { success: true, message: 'Admin user created successfully' }
   } catch (error: any) {
     console.error('[v0] Error resetting admin user:', error)
