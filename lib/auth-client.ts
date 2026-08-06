@@ -1,9 +1,7 @@
 import { createAuthClient } from 'better-auth/react'
 
-// Create auth client with explicit base URL inference
-// This ensures origin validation works correctly
-export const authClient = createAuthClient({
-  baseURL: typeof window !== 'undefined' ? window.location.origin : undefined,
-})
+// Create auth client - it automatically uses the current window origin
+// This ensures origin validation works correctly in both development and production
+export const authClient = createAuthClient()
 
 export const { useSession, signIn, signUp, signOut } = authClient

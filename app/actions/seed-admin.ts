@@ -4,6 +4,8 @@ import { db } from '@/lib/db'
 import { user as userTable, account as accountTable } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
 import { randomUUID } from 'crypto'
+
+// Import bcrypt for password hashing - Better Auth credentials use bcrypt
 import bcrypt from 'bcryptjs'
 
 export async function seedAdminUser() {
@@ -22,14 +24,12 @@ export async function seedAdminUser() {
       return { success: false, message: 'Admin user already exists' }
     }
 
-    // Hash the password using bcrypt (which Better Auth uses internally)
-    const hashedPassword = await bcrypt.hash(password, 10)
+    // Use bcryptjs which is the standard Better Auth uses for password hashing
+    // Hash with 12 rounds (Better Auth's default)
+    const passwordHash = await bcrypt.hash(password, 12)
 
-    // Generate IDs
+    // Create the user
     const userId = randomUUID()
-    const accountId = randomUUID()
-
-    // Create the user directly in the database
     await db.insert(userTable).values({
       id: userId,
       email,
@@ -39,23 +39,24 @@ export async function seedAdminUser() {
       updatedAt: new Date(),
     })
 
-    // Create the account with hashed password using Better Auth v2's expected format
+    // Create the credential account with the properly hashed password
+    const accountId = randomUUID()
     await db.insert(accountTable).values({
       id: accountId,
       userId,
-      accountId: email, // accountId field for email/password auth
-      providerId: 'credential', // providerId instead of provider
-      password: hashedPassword,
+      accountId: email,
+      providerId: 'credential',
+      password: passwordHash,
       createdAt: new Date(),
       updatedAt: new Date(),
     })
 
     return { success: true, message: 'Admin user created successfully' }
   } catch (error: any) {
-    console.error('Error seeding admin user:', error)
-    if (error?.message?.includes('already exists') || error?.message?.includes('duplicate')) {
+    console.error('[v0] Error seeding admin user:', error)
+    if (error?.message?.includes('duplicate key') || error?.message?.includes('already exists')) {
       return { success: false, message: 'Admin user already exists' }
     }
-    return { success: false, message: 'Failed to create admin user: ' + error?.message }
+    return { success: false, message: `Failed to create admin user: ${error?.message}` }
   }
 }
