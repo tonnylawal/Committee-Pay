@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { authClient } from '@/lib/auth-client'
+import { createClient } from '@/lib/auth-client'
 
 interface AuthFormProps {
   mode: 'sign-in' | 'sign-up'
@@ -21,27 +21,33 @@ export default function AuthForm({ mode }: AuthFormProps) {
     setLoading(true)
 
     try {
+      const supabase = createClient()
+
       if (mode === 'sign-in') {
-        const response = await authClient.signIn.email({
+        const { error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
         })
 
-        if (response.error) {
-          setError(response.error.message || 'Sign in failed')
+        if (signInError) {
+          setError(signInError.message || 'Sign in failed')
         } else {
           router.push('/dashboard')
           router.refresh()
         }
       } else {
-        const response = await authClient.signUp.email({
+        const { error: signUpError } = await supabase.auth.signUp({
           email,
           password,
-          name: email.split('@')[0],
+          options: {
+            data: {
+              display_name: email.split('@')[0],
+            },
+          },
         })
 
-        if (response.error) {
-          setError(response.error.message || 'Sign up failed')
+        if (signUpError) {
+          setError(signUpError.message || 'Sign up failed')
         } else {
           router.push('/dashboard')
           router.refresh()

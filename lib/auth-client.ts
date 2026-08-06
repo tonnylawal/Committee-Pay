@@ -1,9 +1,8 @@
-import { createAuthClient } from 'better-auth/react'
+import { createBrowserClient } from '@supabase/ssr'
 
-// Create auth client with explicit base URL inference
-// This ensures origin validation works correctly
-export const authClient = createAuthClient({
-  baseURL: typeof window !== 'undefined' ? window.location.origin : undefined,
-})
-
-export const { useSession, signIn, signUp, signOut } = authClient
+export function createClient() {
+  return createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  )
+}

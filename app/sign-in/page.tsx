@@ -1,13 +1,12 @@
 import Link from 'next/link'
-import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { auth } from '@/lib/auth'
+import { getSession } from '@/lib/auth'
 import AuthForm from '@/components/auth-form'
 
 export const dynamic = 'force-dynamic'
 
 export default async function SignInPage() {
-  const session = await auth.api.getSession({ headers: await headers() })
+  const session = await getSession()
   
   if (session?.user) {
     redirect('/dashboard')

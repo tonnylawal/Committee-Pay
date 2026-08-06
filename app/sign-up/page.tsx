@@ -1,13 +1,11 @@
-import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { auth } from '@/lib/auth'
-import { isInitialSignupAvailable } from '@/lib/auth-bootstrap'
+import { getSession, isInitialSignupAvailable } from '@/lib/auth'
 import AuthForm from '@/components/auth-form'
 
 export const dynamic = 'force-dynamic'
 
 export default async function SignUpPage() {
-  const session = await auth.api.getSession({ headers: await headers() })
+  const session = await getSession()
 
   if (session?.user) {
     redirect('/dashboard')

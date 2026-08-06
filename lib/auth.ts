@@ -1,63 +1,67 @@
-import { betterAuth } from 'better-auth'
-import { APIError, createAuthMiddleware } from 'better-auth/api'
-import { drizzleAdapter } from 'better-auth/adapters/drizzle'
-import { pool, db } from './db'
-import { ensureDatabaseSchema, getUserCount } from './auth-bootstrap'
-import * as schema from './db/schema'
+import { createClient } from '@supabase/supabase-js'
+import { cookies } from 'next/headers'
 
-const getOrigin = () => {
-  // In development, always use localhost
-  if (process.env.NODE_ENV === 'development') {
-    return 'http://localhost:3000'
-  }
-  // In production, use the configured BETTER_AUTH_URL
-  if (process.env.BETTER_AUTH_URL) return process.env.BETTER_AUTH_URL
-  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`
-  if (process.env.V0_RUNTIME_URL) return process.env.V0_RUNTIME_URL
-  return 'http://localhost:3000'
+export async function createServerClient() {
+  const cookieStore = await cookies()
+
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll()
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options)
+            })
+          } catch (error) {
+            // Ignore errors in SSR context
+          }
+        },
+      },
+    },
+  )
 }
 
-export const auth = betterAuth({
-  database: drizzleAdapter(db, {
-    provider: 'pg',
-    schema,
-  }),
-  secret: process.env.BETTER_AUTH_SECRET,
-  baseURL: getOrigin(),
-  basePath: '/api/auth',
-  trustedOrigins: process.env.NODE_ENV === 'development' 
-    ? ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:8000', 'http://127.0.0.1:3000']
-    : [
-        getOrigin(),
-        ...(process.env.VERCEL_PROJECT_PRODUCTION_URL ? [`https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`] : []),
-        ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : []),
-        ...(process.env.V0_RUNTIME_URL ? [process.env.V0_RUNTIME_URL] : []),
-      ],
-  advanced: {
-    defaultCookieAttributes: {
-      sameSite: process.env.NODE_ENV === 'development' ? 'none' : 'lax',
-      secure: true,
-    },
-  },
-  emailAndPassword: {
-    enabled: true,
-  },
-  hooks: {
-    before: createAuthMiddleware(async (ctx) => {
-      if (ctx.path !== '/sign-up/email') return
-      if (!db) {
-        throw new APIError('INTERNAL_SERVER_ERROR', {
-          message: 'Database is not configured',
-        })
-      }
+export async function getSession() {
+  try {
+    const supabase = await createServerClient()
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+    return session
+  } catch (error) {
+    console.error('Error getting session:', error)
+    return null
+  }
+}
 
-      await ensureDatabaseSchema()
-      if ((await getUserCount()) > 0) {
-        throw new APIError('FORBIDDEN', {
-          message: 'Initial signup is closed. Please sign in instead.',
-        })
-      }
-    }),
-  },
-})
+export async function getUser() {
+  try {
+    const supabase = await createServerClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    return user
+  } catch (error) {
+    console.error('Error getting user:', error)
+    return null
+  }
+}
+
+export async function isInitialSignupAvailable() {
+  try {
+    const supabase = await createServerClient()
+    const { count } = await supabase
+      .from('auth.users')
+      .select('*', { count: 'exact', head: true })
+
+    return (count ?? 0) === 0
+  } catch (error) {
+    // If table doesn't exist or there's an error, allow signup
+    return true
+  }
+}

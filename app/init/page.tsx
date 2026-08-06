@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { isInitialSignupAvailable } from '@/lib/auth-bootstrap'
+import { isInitialSignupAvailable } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
