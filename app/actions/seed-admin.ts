@@ -39,13 +39,12 @@ export async function seedAdminUser() {
       updatedAt: new Date(),
     })
 
-    // Create the account with hashed password using Better Auth's expected format
+    // Create the account with hashed password using Better Auth v2's expected format
     await db.insert(accountTable).values({
       id: accountId,
       userId,
-      type: 'email',
-      provider: 'credential',
-      providerAccountId: email,
+      accountId: email, // accountId field for email/password auth
+      providerId: 'credential', // providerId instead of provider
       password: hashedPassword,
       createdAt: new Date(),
       updatedAt: new Date(),
