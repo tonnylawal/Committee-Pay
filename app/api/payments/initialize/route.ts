@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
       metadata: {
         customPath,
         linkId: paymentLink.id,
-        originalAmountUsd: parseFloat(paymentLink.amountUsd.toString()),
+        originalAmountUsd: parseFloat(paymentLink.amountUsd || '0'),
         conversionRate: 134,
       },
     })
