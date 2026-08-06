@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { createClient as createServiceRoleClient } from '@supabase/supabase-js'
 
 export async function resetAndCreateAdminUser() {
   try {
@@ -10,7 +10,11 @@ export async function resetAndCreateAdminUser() {
 
     console.log('[v0] Starting admin user reset for:', email)
 
-    const supabase = await createClient()
+    // Use service role key for admin operations
+    const supabase = createServiceRoleClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
 
     // Sign up the admin user using Supabase Auth
     // This will create the user with proper authentication
