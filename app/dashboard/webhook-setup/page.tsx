@@ -2,11 +2,8 @@ import Link from 'next/link'
 
 export default function WebhookSetupPage() {
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 sm:p-6 md:p-8">
+    <div className="p-4 sm:p-6 md:p-8">
       <div className="max-w-4xl mx-auto">
-        <Link href="/dashboard" className="text-blue-600 hover:text-blue-700 mb-6 inline-block text-sm">
-          ← Back to Dashboard
-        </Link>
 
         <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-4 sm:p-6 md:p-8">
           <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 mb-2">Paystack Webhook Configuration</h1>
@@ -200,6 +197,6 @@ export default function WebhookSetupPage() {
           </div>
         </div>
       </div>
-    </main>
+    </div>
   )
 }
