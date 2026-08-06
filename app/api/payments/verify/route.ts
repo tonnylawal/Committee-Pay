@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
-import { payments } from '@/lib/db/schema'
-import { eq } from 'drizzle-orm'
+import { createClient as createServiceRoleClient } from '@supabase/supabase-js'
 import { verifyPaystackTransaction } from '@/lib/paystack'
 
 export async function GET(request: NextRequest) {
@@ -13,14 +11,23 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Reference parameter is required' }, { status: 400 })
     }
 
-    // Get payment from database
-    const payment = await db.select().from(payments).where(eq(payments.referenceId, reference)).limit(1)
+    const supabase = createServiceRoleClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    )
 
-    if (payment.length === 0) {
+    // Get payment from database
+    const { data: paymentData, error: paymentError } = await supabase
+      .from('payments')
+      .select('*')
+      .eq('reference_id', reference)
+      .limit(1)
+
+    if (paymentError || !paymentData || paymentData.length === 0) {
       return NextResponse.json({ error: 'Payment not found' }, { status: 404 })
     }
 
-    const paymentRecord = payment[0]
+    const paymentRecord = paymentData[0]
 
     // Verify with Paystack
     const verification = await verifyPaystackTransaction(reference)
@@ -30,7 +37,7 @@ export async function GET(request: NextRequest) {
 
       // Update payment status if it changed
       if (paymentRecord.status !== status) {
-        await db.update(payments).set({ status }).where(eq(payments.referenceId, reference))
+        await supabase.from('payments').update({ status }).eq('reference_id', reference)
       }
 
       return NextResponse.json({
@@ -40,8 +47,8 @@ export async function GET(request: NextRequest) {
           status,
           amount: verification.data.amount / 100, // Convert from cents
           email: verification.data.customer?.email,
-          amountUsd: paymentRecord.amountUsd,
-          amountKes: paymentRecord.amountKes,
+          amountUsd: paymentRecord.amount_usd,
+          amountKes: paymentRecord.amount_kes,
         },
       })
     }

@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
-import { paymentLinks } from '@/lib/db/schema'
-import { eq } from 'drizzle-orm'
-import { v4 as uuidv4 } from 'uuid'
+import { createClient as createServiceRoleClient } from '@supabase/supabase-js'
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,26 +15,38 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Custom path is required' }, { status: 400 })
     }
 
-    // Check if custom path already exists
-    const existingLink = await db.select().from(paymentLinks).where(eq(paymentLinks.customPath, customPath)).limit(1)
+    const supabase = createServiceRoleClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    )
 
-    if (existingLink.length > 0) {
+    // Check if custom path already exists
+    const { data: existingLink } = await supabase
+      .from('payment_links')
+      .select('*')
+      .eq('custom_path', customPath)
+      .limit(1)
+
+    if (existingLink && existingLink.length > 0) {
       return NextResponse.json({ error: 'Custom path already exists' }, { status: 400 })
     }
 
     // Create payment link
-    const newLink = await db
-      .insert(paymentLinks)
-      .values({
-        customPath,
-        amountUsd: parseFloat(amountUsd),
+    const { data: newLink, error } = await supabase
+      .from('payment_links')
+      .insert({
+        custom_path: customPath,
+        amount_usd: parseFloat(amountUsd),
         description: description || null,
+        is_active: true,
       })
-      .returning()
+      .select()
+
+    if (error) throw error
 
     return NextResponse.json({
       success: true,
-      data: newLink[0],
+      data: newLink?.[0],
       link: `/pay/${customPath}`,
     })
   } catch (error: any) {
@@ -48,11 +57,21 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const links = await db.select().from(paymentLinks).where(eq(paymentLinks.isActive, true))
+    const supabase = createServiceRoleClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    )
+
+    const { data: links, error } = await supabase
+      .from('payment_links')
+      .select('*')
+      .eq('is_active', true)
+
+    if (error) throw error
 
     return NextResponse.json({
       success: true,
-      data: links,
+      data: links || [],
     })
   } catch (error: any) {
     console.error('[API] Fetch payment links error:', error)

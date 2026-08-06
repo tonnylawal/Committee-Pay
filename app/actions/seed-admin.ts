@@ -1,57 +1,51 @@
 'use server'
 
-import { db } from '@/lib/db'
-import { user as userTable, account as accountTable } from '@/lib/db/schema'
-import { eq } from 'drizzle-orm'
-import { randomUUID } from 'crypto'
-import bcrypt from 'bcryptjs'
+import { createClient as createServiceRoleClient } from '@supabase/supabase-js'
 
 export async function seedAdminUser() {
   try {
     const email = 'info@iicar.org'
-    const password = '@IICAR1016!'  // Admin password as specified
+    const password = '@IICAR1016!' // Admin password as specified
     const name = 'Admin'
 
-    // Check if user already exists
-    const existingUser = await db
-      .select()
-      .from(userTable)
-      .where(eq(userTable.email, email))
+    const supabase = createServiceRoleClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    )
 
-    if (existingUser.length > 0) {
+    // Check if user already exists
+    const { data: existingUser, error: checkError } = await supabase
+      .from('auth.users')
+      .select('id')
+      .eq('email', email)
+      .limit(1)
+
+    if (checkError && checkError.code !== 'PGRST116') {
+      throw checkError
+    }
+
+    if (existingUser && existingUser.length > 0) {
       return { success: false, message: 'Admin user already exists' }
     }
 
-    // Hash the password using bcrypt (which Better Auth uses internally)
-    const hashedPassword = await bcrypt.hash(password, 10)
-
-    // Generate IDs
-    const userId = randomUUID()
-    const accountId = randomUUID()
-
-    // Create the user directly in the database
-    await db.insert(userTable).values({
-      id: userId,
+    // Create user via Supabase Auth API
+    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
       email,
-      emailVerified: true,
-      name,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      password,
+      email_confirm: true,
+      user_metadata: {
+        display_name: name,
+      },
     })
 
-    // Create the account with hashed password using Better Auth's expected format
-    await db.insert(accountTable).values({
-      id: accountId,
-      userId,
-      type: 'email',
-      provider: 'credential',
-      providerAccountId: email,
-      password: hashedPassword,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    })
+    if (authError) {
+      if (authError.message?.includes('already exists') || authError.message?.includes('duplicate')) {
+        return { success: false, message: 'Admin user already exists' }
+      }
+      throw authError
+    }
 
-    return { success: true, message: 'Admin user created successfully' }
+    return { success: true, message: 'Admin user created successfully', userId: authData?.user?.id }
   } catch (error: any) {
     console.error('Error seeding admin user:', error)
     if (error?.message?.includes('already exists') || error?.message?.includes('duplicate')) {
