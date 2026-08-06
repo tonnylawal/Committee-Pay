@@ -6,6 +6,11 @@ import { ensureDatabaseSchema, getUserCount } from './auth-bootstrap'
 import * as schema from './db/schema'
 
 const getOrigin = () => {
+  // In development, always use localhost
+  if (process.env.NODE_ENV === 'development') {
+    return 'http://localhost:3000'
+  }
+  // In production, use the configured BETTER_AUTH_URL
   if (process.env.BETTER_AUTH_URL) return process.env.BETTER_AUTH_URL
   if (process.env.VERCEL_PROJECT_PRODUCTION_URL) return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
   if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`
@@ -32,9 +37,8 @@ export const auth = betterAuth({
   advanced: {
     defaultCookieAttributes: {
       sameSite: process.env.NODE_ENV === 'development' ? 'none' : 'lax',
-      secure: process.env.NODE_ENV === 'development' ? true : true,
+      secure: true,
     },
-    disableCsrfCheck: process.env.NODE_ENV === 'development',
   },
   emailAndPassword: {
     enabled: true,

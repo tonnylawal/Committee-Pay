@@ -9,7 +9,7 @@ import bcrypt from 'bcryptjs'
 export async function seedAdminUser() {
   try {
     const email = 'info@iicar.org'
-    const password = '@IICAR1016!'
+    const password = '@IICAR1016!'  // Admin password as specified
     const name = 'Admin'
 
     // Check if user already exists
