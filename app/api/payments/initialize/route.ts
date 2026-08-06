@@ -47,11 +47,17 @@ export async function POST(request: NextRequest) {
     // Create unique reference
     const reference = `${customPath}-${uuidv4().substring(0, 8)}`
 
+    // Get the domain for callback URL
+    const protocol = process.env.NODE_ENV === 'production' ? 'https' : request.headers.get('x-forwarded-proto') || 'http'
+    const host = request.headers.get('host') || 'localhost:3000'
+    const baseUrl = `${protocol}://${host}`
+
     // Initialize Paystack transaction
     const paystackResponse = await initializePaystackTransaction({
       email,
       amount: Math.round(amountKes * 100), // Paystack expects amount in cents
       reference,
+      callback_url: `${baseUrl}/pay/${customPath}?reference=${reference}`,
       metadata: {
         customPath,
         linkId: paymentLink.id,
