@@ -6,14 +6,12 @@ import { useRouter } from 'next/navigation'
 
 interface FormData {
   customPath: string
-  amountUsd: string
   description: string
 }
 
 export default function CreateLinkForm() {
   const [formData, setFormData] = useState<FormData>({
     customPath: '',
-    amountUsd: '',
     description: '',
   })
   const [loading, setLoading] = useState(false)
@@ -38,7 +36,6 @@ export default function CreateLinkForm() {
     try {
       const link = await createPaymentLink(
         formData.customPath,
-        parseFloat(formData.amountUsd),
         formData.description || undefined,
       )
 
@@ -51,7 +48,6 @@ export default function CreateLinkForm() {
 
       setFormData({
         customPath: '',
-        amountUsd: '',
         description: '',
       })
 
@@ -69,7 +65,8 @@ export default function CreateLinkForm() {
 
   return (
     <div className="bg-white rounded-lg border border-slate-200 p-6 shadow-sm">
-      <h2 className="text-xl font-semibold text-slate-900 mb-6">Create Payment Link</h2>
+      <h2 className="text-xl font-semibold text-slate-900 mb-2">Create Payment Link</h2>
+      <p className="text-sm text-slate-600 mb-6">Customers will decide the payment amount when they access the link</p>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
@@ -87,25 +84,6 @@ export default function CreateLinkForm() {
             className="w-full px-3 py-2 border border-slate-300 rounded-md text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
           <p className="mt-1 text-xs text-slate-500">This will be the URL path for your payment link</p>
-        </div>
-
-        <div>
-          <label htmlFor="amountUsd" className="block text-sm font-medium text-slate-700 mb-2">
-            Amount (USD) *
-          </label>
-          <input
-            id="amountUsd"
-            name="amountUsd"
-            type="number"
-            placeholder="e.g., 50.00"
-            value={formData.amountUsd}
-            onChange={handleChange}
-            required
-            step="0.01"
-            min="0.01"
-            className="w-full px-3 py-2 border border-slate-300 rounded-md text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-          <p className="mt-1 text-xs text-slate-500">Customers will see this amount in USD</p>
         </div>
 
         <div>

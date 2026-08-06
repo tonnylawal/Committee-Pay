@@ -18,14 +18,10 @@ export async function getPaymentLinks() {
   }
 }
 
-export async function createPaymentLink(customPath: string, amountUsd: number, description?: string) {
+export async function createPaymentLink(customPath: string, description?: string) {
   try {
     if (!customPath || customPath.trim().length === 0) {
       throw new Error('Custom path is required')
-    }
-
-    if (amountUsd <= 0) {
-      throw new Error('Amount must be greater than 0')
     }
 
     const supabase = await createClient()
@@ -45,8 +41,9 @@ export async function createPaymentLink(customPath: string, amountUsd: number, d
       .from('payment_links')
       .insert({
         custom_path: customPath,
-        amount_usd: amountUsd,
+        amount_usd: null,
         description: description || null,
+        is_flexible_amount: true,
       })
       .select()
 
