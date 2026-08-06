@@ -134,12 +134,16 @@ export default function UserManagementClient() {
         </div>
       )}
 
-      <div className="mb-8 flex justify-end">
+      <div className="mb-8 flex justify-between items-center">
+        <div>
+          <h2 className="text-xl font-bold text-slate-900">Team Members</h2>
+          <p className="text-sm text-slate-600 mt-1">Manage users, roles, and permissions</p>
+        </div>
         <button
           onClick={() => setShowCreateForm(!showCreateForm)}
           className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg transition"
         >
-          Add New User
+          {showCreateForm ? 'Hide Form' : '+ Create Admin'}
         </button>
       </div>
 

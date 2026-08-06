@@ -19,7 +19,14 @@ export default async function UsersPage() {
     .eq('id', user.id)
     .single()
 
-  if (userData?.role !== 'admin') {
+  // If no user record exists yet, treat as viewer (redirect)
+  // If user exists and is not admin, redirect to dashboard
+  if (userData && userData.role !== 'admin') {
+    redirect('/dashboard')
+  }
+  
+  // If userData is null, user hasn't been created yet, redirect them
+  if (!userData) {
     redirect('/dashboard')
   }
 
