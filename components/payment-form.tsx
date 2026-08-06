@@ -260,7 +260,7 @@ export default function PaymentForm({ link }: PaymentFormProps) {
 
       {/* Footer */}
       <p className="text-xs text-slate-500 text-center mt-6">
-        Secure payment powered by Paystack. Your payment information is encrypted and secure.
+        Secure payment processing. Your payment information is encrypted and secure.
       </p>
     </div>
   )
