@@ -23,12 +23,6 @@ export default async function SignInPage() {
           <p className="text-center text-slate-600 mb-8">Sign in to manage payment links</p>
           
           <AuthForm mode="sign-in" />
-          <p className="text-center text-sm text-slate-500 mt-6">
-            First-time setup?{' '}
-            <Link href="/sign-up" className="font-medium text-blue-600 hover:text-blue-700">
-              Create the administrator account
-            </Link>
-          </p>
         </div>
       </div>
     </main>
