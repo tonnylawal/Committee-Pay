@@ -22,21 +22,44 @@ export default function AuthForm({ mode }: AuthFormProps) {
 
     try {
       const supabase = createClient()
+      console.log('[v0] Supabase client created')
 
       if (mode === 'sign-in') {
-        const { error: signInError } = await supabase.auth.signInWithPassword({
+        console.log('[v0] Attempting sign-in with email:', email)
+        const { data, error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
         })
 
+        console.log('[v0] Sign in response:', { 
+          hasData: !!data, 
+          hasSession: !!data?.session,
+          error: signInError?.message 
+        })
+
         if (signInError) {
+          console.log('[v0] Sign in error:', signInError.message)
           setError(signInError.message || 'Sign in failed')
-        } else {
-          router.push('/dashboard')
-          router.refresh()
+          setLoading(false)
+          return
         }
+
+        if (!data?.session) {
+          console.log('[v0] No session returned')
+          setError('Sign in failed - no session created')
+          setLoading(false)
+          return
+        }
+
+        console.log('[v0] Session created, waiting for cookies to be set...')
+        // Wait for cookies to be set before redirecting
+        await new Promise(resolve => setTimeout(resolve, 800))
+        console.log('[v0] Redirecting to dashboard')
+        router.push('/dashboard')
+        router.refresh()
       } else {
-        const { error: signUpError } = await supabase.auth.signUp({
+        console.log('[v0] Attempting sign-up with email:', email)
+        const { error: signUpError, data: signUpData } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -46,16 +69,26 @@ export default function AuthForm({ mode }: AuthFormProps) {
           },
         })
 
+        console.log('[v0] Sign up response:', { 
+          hasData: !!signUpData,
+          error: signUpError?.message 
+        })
+
         if (signUpError) {
+          console.log('[v0] Sign up error:', signUpError.message)
           setError(signUpError.message || 'Sign up failed')
-        } else {
-          router.push('/dashboard')
-          router.refresh()
+          setLoading(false)
+          return
         }
+
+        console.log('[v0] Sign up successful, redirecting to dashboard')
+        await new Promise(resolve => setTimeout(resolve, 800))
+        router.push('/dashboard')
+        router.refresh()
       }
     } catch (err: any) {
+      console.log('[v0] Catch error:', err.message)
       setError(err.message || 'An error occurred')
-    } finally {
       setLoading(false)
     }
   }

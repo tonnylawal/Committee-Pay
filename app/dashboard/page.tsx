@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { getUser } from '@/lib/supabase-server'
+import { getUser } from '@/lib/auth'
 import { getPaymentLinks, getPaymentStats } from '@/app/actions/payment-links'
 import CreateLinkForm from '@/components/create-link-form'
 import PaymentLinksTable from '@/components/payment-links-table'
