@@ -78,6 +78,15 @@ export default function PaymentLinksTable({ links }: PaymentLinksTableProps) {
     alert('Link copied to clipboard!')
   }
 
+  const formatDate = (dateString: string | null | undefined): string => {
+    if (!dateString) return 'N/A'
+    const date = new Date(dateString)
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const year = date.getFullYear()
+    return `${month}/${day}/${year}`
+  }
+
   if (links.length === 0) {
     return (
       <div className="bg-white rounded-lg border border-slate-200 p-12 shadow-sm text-center">
@@ -142,8 +151,8 @@ export default function PaymentLinksTable({ links }: PaymentLinksTableProps) {
                       {link.is_active ? 'Active' : 'Inactive'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm text-slate-600">
-                    {link.created_at && new Date(link.created_at).toLocaleDateString()}
+                  <td className="px-6 py-4 text-sm text-slate-600" suppressHydrationWarning>
+                    {formatDate(link.created_at as string)}
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
