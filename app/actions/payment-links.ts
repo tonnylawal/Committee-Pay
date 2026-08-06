@@ -60,6 +60,7 @@ export async function createPaymentLink(
         minimum_amount_usd: amountType === 'flexible' ? minimumAmount : null,
         description: description || null,
         is_flexible_amount: amountType === 'flexible',
+        is_active: true,
       })
       .select()
 
@@ -96,12 +97,44 @@ export async function updatePaymentLink(
   }
 }
 
-export async function deletePaymentLink(id: number) {
+export async function disablePaymentLink(id: number) {
   try {
     const supabase = await createClient()
     const { error } = await supabase
       .from('payment_links')
       .update({ is_active: false })
+      .eq('id', id)
+
+    if (error) throw error
+    return { success: true }
+  } catch (error: any) {
+    console.error('[Action] Disable payment link error:', error)
+    throw new Error('Failed to disable payment link')
+  }
+}
+
+export async function activatePaymentLink(id: number) {
+  try {
+    const supabase = await createClient()
+    const { error } = await supabase
+      .from('payment_links')
+      .update({ is_active: true })
+      .eq('id', id)
+
+    if (error) throw error
+    return { success: true }
+  } catch (error: any) {
+    console.error('[Action] Activate payment link error:', error)
+    throw new Error('Failed to activate payment link')
+  }
+}
+
+export async function deletePaymentLink(id: number) {
+  try {
+    const supabase = await createClient()
+    const { error } = await supabase
+      .from('payment_links')
+      .delete()
       .eq('id', id)
 
     if (error) throw error

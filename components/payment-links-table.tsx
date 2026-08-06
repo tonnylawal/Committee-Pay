@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { updatePaymentLink, deletePaymentLink, getPaymentsByLinkId } from '@/app/actions/payment-links'
+import { updatePaymentLink, disablePaymentLink, activatePaymentLink, deletePaymentLink, getPaymentsByLinkId } from '@/app/actions/payment-links'
 import { useRouter } from 'next/navigation'
 import PaymentDetailsModal from './payment-details-modal'
 import EditLinkModal from './edit-link-modal'
@@ -27,14 +27,40 @@ export default function PaymentLinksTable({ links }: PaymentLinksTableProps) {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
+  const handleDisable = async (id: number) => {
+    if (confirm('Are you sure you want to disable this link?')) {
+      try {
+        setLoading(true)
+        await disablePaymentLink(id)
+        router.refresh()
+      } catch (error) {
+        alert('Failed to disable link')
+      } finally {
+        setLoading(false)
+      }
+    }
+  }
+
+  const handleActivate = async (id: number) => {
+    try {
+      setLoading(true)
+      await activatePaymentLink(id)
+      router.refresh()
+    } catch (error) {
+      alert('Failed to activate link')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleDelete = async (id: number) => {
-    if (confirm('Are you sure you want to deactivate this link?')) {
+    if (confirm('Are you sure you want to permanently delete this link?')) {
       try {
         setLoading(true)
         await deletePaymentLink(id)
         router.refresh()
       } catch (error) {
-        alert('Failed to deactivate link')
+        alert('Failed to delete link')
       } finally {
         setLoading(false)
       }
@@ -108,16 +134,16 @@ export default function PaymentLinksTable({ links }: PaymentLinksTableProps) {
                   <td className="px-6 py-4">
                     <span
                       className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${
-                        link.isActive
+                        link.is_active
                           ? 'bg-green-100 text-green-800'
                           : 'bg-slate-100 text-slate-800'
                       }`}
                     >
-                      {link.isActive ? 'Active' : 'Inactive'}
+                      {link.is_active ? 'Active' : 'Inactive'}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-sm text-slate-600">
-                    {link.createdAt && new Date(link.createdAt).toLocaleDateString()}
+                    {link.created_at && new Date(link.created_at).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
@@ -139,13 +165,23 @@ export default function PaymentLinksTable({ links }: PaymentLinksTableProps) {
                       >
                         Payments
                       </button>
-                      <button
-                        onClick={() => handleDelete(link.id)}
-                        disabled={loading || !link.is_active}
-                        className="px-3 py-1 text-xs bg-red-100 hover:bg-red-200 text-red-900 disabled:opacity-50 disabled:cursor-not-allowed rounded transition"
-                      >
-                        {link.is_active ? 'Disable' : 'Disabled'}
-                      </button>
+                      {link.is_active ? (
+                        <button
+                          onClick={() => handleDisable(link.id)}
+                          disabled={loading}
+                          className="px-3 py-1 text-xs bg-red-100 hover:bg-red-200 text-red-900 rounded transition"
+                        >
+                          Disable
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleActivate(link.id)}
+                          disabled={loading}
+                          className="px-3 py-1 text-xs bg-green-100 hover:bg-green-200 text-green-900 rounded transition"
+                        >
+                          Activate
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
