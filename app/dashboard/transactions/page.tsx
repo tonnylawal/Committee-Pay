@@ -31,13 +31,10 @@ export default async function TransactionsPage() {
   const transactions = await getTransactions()
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 sm:p-6 md:p-8">
+    <div className="p-4 sm:p-6 md:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <a href="/dashboard" className="text-blue-600 hover:text-blue-700 mb-4 inline-block text-sm">
-            ← Back to Dashboard
-          </a>
           <h1 className="text-3xl font-bold text-slate-900 mb-2">Transaction History</h1>
           <p className="text-slate-600">View all payments and transaction details</p>
         </div>
@@ -86,7 +83,8 @@ export default async function TransactionsPage() {
 
         {/* Transactions Table */}
         <TransactionsTable transactions={transactions} />
+        </div>
       </div>
-    </main>
+    </div>
   )
 }

@@ -20,32 +20,10 @@ export default async function DashboardPage() {
   const stats = await getPaymentStats()
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 sm:p-6 md:p-8">
+    <div className="p-4 sm:p-6 md:p-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <DashboardHeader user={user!} />
-
-        {/* Navigation Links */}
-        <div className="mb-6 flex flex-wrap gap-2 sm:gap-4">
-          <a href="/dashboard" className="text-xs sm:text-sm text-slate-600 hover:text-slate-900 font-medium px-3 sm:px-4 py-2 rounded-lg hover:bg-slate-200 transition">
-            Payment Links
-          </a>
-          <a href="/dashboard/transactions" className="text-xs sm:text-sm text-slate-600 hover:text-slate-900 font-medium px-3 sm:px-4 py-2 rounded-lg hover:bg-slate-200 transition">
-            Transactions
-          </a>
-          <a href="/dashboard/api-keys" className="text-xs sm:text-sm text-slate-600 hover:text-slate-900 font-medium px-3 sm:px-4 py-2 rounded-lg hover:bg-slate-200 transition">
-            API Keys
-          </a>
-          <a href="/dashboard/webhook-setup" className="text-xs sm:text-sm text-slate-600 hover:text-slate-900 font-medium px-3 sm:px-4 py-2 rounded-lg hover:bg-slate-200 transition">
-            Webhook Setup
-          </a>
-          <a href="/api-docs" target="_blank" className="text-xs sm:text-sm text-slate-600 hover:text-slate-900 font-medium px-3 sm:px-4 py-2 rounded-lg hover:bg-slate-200 transition">
-            API Docs
-          </a>
-          <a href="/sign-up" className="text-xs sm:text-sm text-slate-600 hover:text-slate-900 font-medium px-3 sm:px-4 py-2 rounded-lg hover:bg-slate-200 transition">
-            Create Admin Account
-          </a>
-        </div>
 
         {/* Stats Overview */}
         <StatsOverview stats={stats} />
@@ -63,6 +41,6 @@ export default async function DashboardPage() {
           </div>
         </div>
       </div>
-    </main>
+    </div>
   )
 }

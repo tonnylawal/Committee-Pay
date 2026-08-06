@@ -35,10 +35,16 @@ export default function ApiKeysClient() {
   const fetchApiKeys = async () => {
     try {
       const response = await fetch('/api/dashboard/api-keys')
+      if (!response.ok) {
+        console.error('API error:', response.status)
+        setApiKeys([])
+        return
+      }
       const data = await response.json()
-      setApiKeys(data)
+      setApiKeys(Array.isArray(data) ? data : [])
     } catch (error) {
       console.error('Error fetching API keys:', error)
+      setApiKeys([])
     } finally {
       setLoading(false)
     }
