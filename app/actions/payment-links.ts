@@ -18,10 +18,24 @@ export async function getPaymentLinks() {
   }
 }
 
-export async function createPaymentLink(customPath: string, description?: string) {
+export async function createPaymentLink(
+  customPath: string,
+  amountType: 'fixed' | 'flexible',
+  amountUsd?: number,
+  minimumAmount?: number,
+  description?: string,
+) {
   try {
     if (!customPath || customPath.trim().length === 0) {
       throw new Error('Custom path is required')
+    }
+
+    if (amountType === 'fixed' && (!amountUsd || amountUsd <= 0)) {
+      throw new Error('Fixed amount must be greater than 0')
+    }
+
+    if (amountType === 'flexible' && (!minimumAmount || minimumAmount < 0.01)) {
+      throw new Error('Minimum amount must be at least $0.01')
     }
 
     const supabase = await createClient()
@@ -41,9 +55,11 @@ export async function createPaymentLink(customPath: string, description?: string
       .from('payment_links')
       .insert({
         custom_path: customPath,
-        amount_usd: null,
+        amount_usd: amountType === 'fixed' ? amountUsd : null,
+        amount_type: amountType,
+        minimum_amount_usd: amountType === 'flexible' ? minimumAmount : null,
         description: description || null,
-        is_flexible_amount: true,
+        is_flexible_amount: amountType === 'flexible',
       })
       .select()
 
@@ -57,7 +73,12 @@ export async function createPaymentLink(customPath: string, description?: string
 
 export async function updatePaymentLink(
   id: number,
-  updates: { description?: string; is_active?: boolean; amount_usd?: number },
+  updates: {
+    description?: string
+    is_active?: boolean
+    amount_usd?: number
+    minimum_amount_usd?: number
+  },
 ) {
   try {
     const supabase = await createClient()

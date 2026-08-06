@@ -7,9 +7,11 @@ interface PaymentLink {
   id: number
   custom_path: string
   amount_usd: number | null
+  amount_type?: 'fixed' | 'flexible'
+  minimum_amount_usd?: number
   description?: string
   is_active: boolean
-  is_flexible_amount: boolean
+  is_flexible_amount?: boolean
 }
 
 interface PaymentFormProps {
@@ -71,8 +73,21 @@ export default function PaymentForm({ link }: PaymentFormProps) {
     setError('')
 
     try {
-      const amount = parseFloat(amountUsd)
-      if (!amount || amount <= 0) {
+      // Determine the amount based on link type
+      let finalAmount = 0
+      const amountType = link.amount_type || (link.is_flexible_amount ? 'flexible' : 'fixed')
+
+      if (amountType === 'fixed') {
+        finalAmount = link.amount_usd || 0
+      } else {
+        finalAmount = parseFloat(amountUsd)
+        const minAmount = link.minimum_amount_usd || 20
+        if (!finalAmount || finalAmount < minAmount) {
+          throw new Error(`Minimum amount is $${minAmount.toFixed(2)}`)
+        }
+      }
+
+      if (finalAmount <= 0) {
         throw new Error('Please enter a valid amount')
       }
 
@@ -83,7 +98,7 @@ export default function PaymentForm({ link }: PaymentFormProps) {
         body: JSON.stringify({
           customPath: link.custom_path,
           email,
-          amountUsd: amount,
+          amountUsd: finalAmount,
         }),
       })
 
@@ -159,32 +174,55 @@ export default function PaymentForm({ link }: PaymentFormProps) {
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold text-slate-900 mb-2">Payment</h1>
         {link.description && <p className="text-slate-600">{link.description}</p>}
-        {link.is_flexible_amount && <p className="text-sm text-slate-500 mt-2">Enter the amount you want to pay</p>}
       </div>
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="amount" className="block text-sm font-medium text-slate-700 mb-2">
-            Amount (USD) *
-          </label>
-          <div className="relative">
-            <span className="absolute left-4 top-2 text-slate-900 font-semibold">$</span>
-            <input
-              id="amount"
-              type="number"
-              placeholder="50.00"
-              value={amountUsd}
-              onChange={handleAmountChange}
-              required
-              disabled={loading}
-              step="0.01"
-              min="0.01"
-              className="w-full pl-8 pr-4 py-2 border border-slate-300 rounded-md text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-slate-100"
-            />
-          </div>
-          <p className="mt-1 text-xs text-slate-500">Minimum: $0.01</p>
-        </div>
+        {(() => {
+          const amountType = link.amount_type || (link.is_flexible_amount ? 'flexible' : 'fixed')
+          const minAmount = link.minimum_amount_usd || 20
+
+          if (amountType === 'fixed') {
+            return (
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Amount (USD)</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-2 text-slate-900 font-semibold">$</span>
+                  <input
+                    type="text"
+                    value={link.amount_usd?.toFixed(2)}
+                    disabled
+                    className="w-full pl-8 pr-4 py-3 border border-slate-300 rounded-md text-slate-900 bg-slate-50 font-semibold text-lg"
+                  />
+                </div>
+              </div>
+            )
+          } else {
+            return (
+              <div>
+                <label htmlFor="amount" className="block text-sm font-medium text-slate-700 mb-2">
+                  Amount (USD) *
+                </label>
+                <div className="relative">
+                  <span className="absolute left-4 top-2 text-slate-900 font-semibold">$</span>
+                  <input
+                    id="amount"
+                    type="number"
+                    placeholder={minAmount.toString()}
+                    value={amountUsd}
+                    onChange={handleAmountChange}
+                    disabled={loading}
+                    step="0.01"
+                    min={minAmount}
+                    className="w-full pl-8 pr-4 py-2 border border-slate-300 rounded-md text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-slate-100"
+                  />
+                </div>
+                <p className="mt-1 text-xs text-slate-500">Minimum: ${minAmount.toFixed(2)}</p>
+              </div>
+            )
+          }
+        })()}
+
 
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-2">
@@ -206,10 +244,17 @@ export default function PaymentForm({ link }: PaymentFormProps) {
 
         <button
           type="submit"
-          disabled={loading || !amountUsd}
+          disabled={loading || ((link.amount_type || link.is_flexible_amount) && !amountUsd)}
           className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-400 text-white font-semibold py-3 px-4 rounded-md transition duration-200"
         >
-          {loading ? 'Processing...' : amountUsd ? `Pay $${parseFloat(amountUsd).toFixed(2)}` : 'Enter amount to continue'}
+          {(() => {
+            const amountType = link.amount_type || (link.is_flexible_amount ? 'flexible' : 'fixed')
+            if (loading) return 'Processing...'
+            if (amountType === 'fixed') {
+              return `Pay $${link.amount_usd?.toFixed(2)}`
+            }
+            return amountUsd ? `Pay $${parseFloat(amountUsd).toFixed(2)}` : 'Enter amount to continue'
+          })()}
         </button>
       </form>
 
