@@ -3,14 +3,13 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { authClient } from '@/lib/auth-client'
 
 interface DashboardHeaderProps {
   user: {
     id: string
     email: string
-    name?: string
-    image?: string
+    name?: string | null
+    image?: string | null
   }
 }
 
@@ -21,14 +20,11 @@ export default function DashboardHeader({ user }: DashboardHeaderProps) {
   const handleSignOut = async () => {
     setSigningOut(true)
     try {
-      await authClient.signOut({
-        fetchOptions: {
-          onSuccess: () => {
-            router.push('/')
-            router.refresh()
-          },
-        },
-      })
+      await fetch('/api/auth/sign-out', { method: 'POST' })
+      router.push('/')
+      router.refresh()
+    } catch (error) {
+      console.error('Sign out error:', error)
     } finally {
       setSigningOut(false)
     }
