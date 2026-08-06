@@ -25,6 +25,19 @@ export default async function DashboardPage() {
         {/* Header */}
         <DashboardHeader user={user!} />
 
+        {/* Navigation Links */}
+        <div className="mb-6 flex gap-4">
+          <a href="/dashboard" className="text-slate-600 hover:text-slate-900 font-medium px-4 py-2 rounded-lg hover:bg-slate-200 transition">
+            Payment Links
+          </a>
+          <a href="/dashboard/api-keys" className="text-slate-600 hover:text-slate-900 font-medium px-4 py-2 rounded-lg hover:bg-slate-200 transition">
+            API Keys
+          </a>
+          <a href="/api-docs" target="_blank" className="text-slate-600 hover:text-slate-900 font-medium px-4 py-2 rounded-lg hover:bg-slate-200 transition">
+            API Docs
+          </a>
+        </div>
+
         {/* Stats Overview */}
         <StatsOverview stats={stats} />
 
