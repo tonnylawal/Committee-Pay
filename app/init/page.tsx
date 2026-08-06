@@ -2,16 +2,25 @@
 
 import { seedAdminUser } from '@/app/actions/seed-admin'
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 export default function InitPage() {
   const [status, setStatus] = useState('')
   const [loading, setLoading] = useState(false)
+  const router = useRouter()
 
   const handleSeed = async () => {
     setLoading(true)
     try {
       const result = await seedAdminUser()
       setStatus(result.message)
+      
+      if (result.success) {
+        // Redirect to sign-in after successful creation
+        setTimeout(() => {
+          router.push('/sign-in')
+        }, 2000)
+      }
     } catch (error: any) {
       setStatus(`Error: ${error.message}`)
     } finally {
