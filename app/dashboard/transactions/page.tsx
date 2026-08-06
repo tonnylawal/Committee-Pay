@@ -83,7 +83,6 @@ export default async function TransactionsPage() {
 
         {/* Transactions Table */}
         <TransactionsTable transactions={transactions} />
-        </div>
       </div>
     </div>
   )
