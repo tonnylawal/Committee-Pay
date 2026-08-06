@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { getUser } from '@/lib/auth'
+import { createClient as createServerClient } from '@/lib/supabase/server'
 import { generateApiKey } from '@/lib/api-keys'
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await getUser()
+    const supabaseAuth = await createServerClient()
+    const {
+      data: { user },
+    } = await supabaseAuth.auth.getUser()
+
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -35,7 +39,11 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await getUser()
+    const supabaseAuth = await createServerClient()
+    const {
+      data: { user },
+    } = await supabaseAuth.auth.getUser()
+
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }

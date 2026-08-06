@@ -15,7 +15,7 @@ export default function ApiDocsPage() {
           <p>Alghahim Pay API allows you to integrate payment processing into your internal products.</p>
           <div className="bg-slate-50 p-4 rounded border border-slate-200">
             <h4 className="font-semibold mb-2">Base URL</h4>
-            <code className="text-sm">https://alghahim.pay/api/v1</code>
+            <code className="text-sm">https://pay.iicar.org/api/v1</code>
           </div>
           <div className="bg-slate-50 p-4 rounded border border-slate-200">
             <h4 className="font-semibold mb-2">Authentication</h4>
