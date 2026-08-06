@@ -30,9 +30,8 @@ export const auth = betterAuth({
   advanced: {
     defaultCookieAttributes: {
       sameSite: process.env.NODE_ENV === 'development' ? 'none' : 'lax',
-      secure: process.env.NODE_ENV === 'development' ? true : true,
+      secure: true,
     },
-    disableCsrfCheck: process.env.NODE_ENV === 'development',
   },
   emailAndPassword: {
     enabled: true,
