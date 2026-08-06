@@ -36,6 +36,9 @@ export default async function DashboardPage() {
           <a href="/api-docs" target="_blank" className="text-xs sm:text-sm text-slate-600 hover:text-slate-900 font-medium px-3 sm:px-4 py-2 rounded-lg hover:bg-slate-200 transition">
             API Docs
           </a>
+          <a href="/sign-up" className="text-xs sm:text-sm text-slate-600 hover:text-slate-900 font-medium px-3 sm:px-4 py-2 rounded-lg hover:bg-slate-200 transition">
+            Create Admin Account
+          </a>
         </div>
 
         {/* Stats Overview */}
