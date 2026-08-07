@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient as createServiceRoleClient } from '@supabase/supabase-js'
 import { validatePaystackSignature, verifyPaystackTransaction } from '@/lib/paystack'
+import { applyWebhookPaymentStatus } from '@/lib/paystack-payment-status'
 
 export async function POST(request: NextRequest) {
   try {
@@ -30,88 +30,25 @@ export async function POST(request: NextRequest) {
 
     console.log('[Webhook] Received event:', eventType, data?.reference)
 
-    // Handle charge.success event
-    if (eventType === 'charge.success') {
-      const reference = data.reference
-      const amount = data.amount / 100 // Convert from kobo to KES
+    const reference = data?.reference
+    const isChargeEvent = typeof eventType === 'string' && eventType.startsWith('charge.')
 
-      // Get Supabase client
-      const supabase = createServiceRoleClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      )
+    if (reference && isChargeEvent) {
+      let paystackStatus = data?.status || (eventType === 'charge.success' ? 'success' : 'failed')
 
-      // Update payment status
-      const { data: payments, error: fetchError } = await supabase
-        .from('payments')
-        .select('*')
-        .eq('reference_id', reference)
-        .limit(1)
-
-      if (fetchError || !payments || payments.length === 0) {
-        console.warn('[Webhook] Payment not found for reference:', reference)
-        // Still return 200 to acknowledge receipt
-        return NextResponse.json({ received: true })
-      }
-
-      const payment = payments[0]
-
-      // Verify with Paystack to ensure authenticity
-      try {
+      // The verify endpoint is authoritative and also covers statuses that do
+      // not reliably arrive as a webhook, such as abandoned transactions.
+      if (eventType === 'charge.success') {
         const verification = await verifyPaystackTransaction(reference)
-        
-        if (verification.status && verification.data?.status === 'success') {
-          // Update payment status to completed
-          const { error: updateError } = await supabase
-            .from('payments')
-            .update({
-              status: 'completed',
-              transaction_id: verification.data.id.toString(),
-              updated_at: new Date().toISOString(),
-            })
-            .eq('id', payment.id)
-
-          if (updateError) {
-            console.error('[Webhook] Failed to update payment:', updateError)
-          } else {
-            console.log('[Webhook] Payment marked as completed:', reference)
-          }
+        if (verification.status && verification.data) {
+          paystackStatus = verification.data.status
         }
-      } catch (error) {
-        console.error('[Webhook] Verification failed:', error)
       }
 
-      return NextResponse.json({ received: true })
+      const status = await applyWebhookPaymentStatus(reference, paystackStatus)
+      console.log('[Webhook] Payment status updated:', { reference, status, eventType })
     }
 
-    // Handle charge.failed event
-    if (eventType === 'charge.failed') {
-      const reference = data.reference
-
-      const supabase = createServiceRoleClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      )
-
-      // Update payment status to failed
-      const { error: updateError } = await supabase
-        .from('payments')
-        .update({
-          status: 'failed',
-          updated_at: new Date().toISOString(),
-        })
-        .eq('reference_id', reference)
-
-      if (updateError) {
-        console.error('[Webhook] Failed to update failed payment:', updateError)
-      } else {
-        console.log('[Webhook] Payment marked as failed:', reference)
-      }
-
-      return NextResponse.json({ received: true })
-    }
-
-    // Acknowledge all other events
     return NextResponse.json({ received: true })
   } catch (error: any) {
     console.error('[Webhook] Error processing webhook:', error)
