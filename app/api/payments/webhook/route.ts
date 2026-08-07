@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient as createServiceRoleClient } from '@supabase/supabase-js'
 import { validatePaystackSignature, verifyPaystackTransaction } from '@/lib/paystack'
+import { applyWebhookPaymentStatus } from '@/lib/paystack-payment-status'
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,30 +23,24 @@ export async function POST(request: NextRequest) {
     const data = JSON.parse(body)
     const { event, data: eventData } = data
 
-    // Handle successful charge
-    if (event === 'charge.success') {
-      const { reference, status } = eventData
+    const reference = eventData?.reference
+    const isChargeEvent = typeof event === 'string' && event.startsWith('charge.')
 
-      // Verify with Paystack
-      const verification = await verifyPaystackTransaction(reference)
+    if (reference && isChargeEvent) {
+      let paystackStatus = eventData?.status || (event === 'charge.success' ? 'success' : 'failed')
 
-      if (verification.status && verification.data?.status === 'success') {
-        // Update payment status
-        const supabase = createServiceRoleClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.SUPABASE_SERVICE_ROLE_KEY!,
-        )
-
-        await supabase
-          .from('payments')
-          .update({ status: 'completed' })
-          .eq('reference_id', reference)
-
-        console.log(`[Webhook] Payment completed: ${reference}`)
+      if (event === 'charge.success') {
+        const verification = await verifyPaystackTransaction(reference)
+        if (verification.status && verification.data) {
+          paystackStatus = verification.data.status
+        }
       }
+
+      const status = await applyWebhookPaymentStatus(reference, paystackStatus)
+      console.log('[Webhook] Payment status updated:', { reference, status, event })
     }
 
-    // Return 200 to acknowledge receipt
+    // Return 200 to acknowledge webhook
     return NextResponse.json({ success: true })
   } catch (error: any) {
     console.error('[Webhook] Error processing webhook:', error)

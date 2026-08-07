@@ -1,9 +1,12 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { reconcilePendingPayments } from '@/lib/paystack-payment-status'
 import TransactionsTable from '@/components/transactions-table'
 
 async function getTransactions() {
   try {
+    await reconcilePendingPayments(25)
+
     const supabase = await createClient()
     const { data, error } = await supabase
       .from('payments')
