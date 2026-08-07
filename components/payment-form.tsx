@@ -26,7 +26,6 @@ export default function PaymentForm({ link }: PaymentFormProps) {
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'verifying' | 'success' | 'failed'>(
     'idle',
   )
-  const router = useRouter()
   const searchParams = useSearchParams()
 
   // Check payment status if returning from Paystack
@@ -243,7 +242,11 @@ export default function PaymentForm({ link }: PaymentFormProps) {
 
         <button
           type="submit"
-          disabled={loading || (!email) || ((link.amount_type || link.is_flexible_amount) && !amountUsd)}
+          disabled={
+            loading ||
+            !email.trim() ||
+            ((link.amount_type || (link.is_flexible_amount ? 'flexible' : 'fixed')) === 'flexible' && !amountUsd)
+          }
           className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-400 text-white font-semibold py-2 sm:py-3 px-3 sm:px-4 rounded-md transition duration-200 text-sm sm:text-base"
         >
           {(() => {
