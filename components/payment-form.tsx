@@ -26,7 +26,6 @@ export default function PaymentForm({ link }: PaymentFormProps) {
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'verifying' | 'success' | 'failed'>(
     'idle',
   )
-  const router = useRouter()
   const searchParams = useSearchParams()
 
   // Check payment status if returning from Paystack
