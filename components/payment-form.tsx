@@ -1,7 +1,7 @@
 'use client'
 
 import { ChangeEvent, FormEvent, useState, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 
 interface PaymentLink {
   id: number
@@ -134,16 +134,15 @@ export default function PaymentForm({ link }: PaymentFormProps) {
   if (paymentStatus === 'success') {
     return (
       <div className="bg-white rounded-lg border border-green-200 p-8 shadow-sm max-w-md w-full text-center bg-green-50">
-        <div className="text-4xl mb-4">✓</div>
-        <h2 className="text-2xl font-bold text-green-900">Payment Successful!</h2>
-        <p className="text-green-800 mt-3">Your payment has been processed successfully.</p>
-        <p className="text-sm text-green-700 mt-4">You will receive a confirmation email shortly.</p>
-        <button
-          onClick={() => window.location.href = '/'}
-          className="mt-6 w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-md transition"
-        >
-          Return Home
-        </button>
+        <div className="text-4xl mb-4" aria-hidden="true">✓</div>
+        <h2 className="text-2xl font-bold text-green-900">Thank you for your payment</h2>
+        <p className="text-green-800 mt-3">Your payment was completed successfully.</p>
+        <p className="text-sm text-green-700 mt-4">
+          An invoice and payment confirmation will be sent to your email shortly.
+        </p>
+        <p className="text-sm font-medium text-green-900 mt-6">
+          You can now close this tab.
+        </p>
       </div>
     )
   }
