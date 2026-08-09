@@ -172,13 +172,20 @@ export async function getPaymentStats() {
     if (error) throw error
 
     const payments = allPayments || []
+    const completedPayments = payments.filter((p: any) => p.status === 'completed')
+    const failedPayments = payments.filter((p: any) => p.status === 'failed')
+    const sumAmount = (rows: any[], field: 'amount_usd' | 'amount_kes') =>
+      rows.reduce((sum: number, payment: any) => sum + parseFloat(payment[field]?.toString() || '0'), 0)
+
     const stats = {
       total: payments.length,
-      completed: payments.filter((p: any) => p.status === 'completed').length,
+      completed: completedPayments.length,
       pending: payments.filter((p: any) => p.status === 'pending').length,
-      failed: payments.filter((p: any) => p.status === 'failed').length,
-      totalAmountUsd: payments.reduce((sum: number, p: any) => sum + parseFloat(p.amount_usd?.toString() || '0'), 0),
-      totalAmountKes: payments.reduce((sum: number, p: any) => sum + parseFloat(p.amount_kes?.toString() || '0'), 0),
+      failed: failedPayments.length,
+      completedAmountUsd: sumAmount(completedPayments, 'amount_usd'),
+      completedAmountKes: sumAmount(completedPayments, 'amount_kes'),
+      failedAmountUsd: sumAmount(failedPayments, 'amount_usd'),
+      failedAmountKes: sumAmount(failedPayments, 'amount_kes'),
     }
 
     return stats

@@ -4,8 +4,10 @@ interface StatsOverviewProps {
     completed: number
     pending: number
     failed: number
-    totalAmountUsd: number
-    totalAmountKes: number
+    completedAmountUsd: number
+    completedAmountKes: number
+    failedAmountUsd: number
+    failedAmountKes: number
   }
 }
 
@@ -36,16 +38,28 @@ export default function StatsOverview({ stats }: StatsOverviewProps) {
       textColor: 'text-red-900',
     },
     {
-      label: 'Total (USD)',
-      value: `$${stats.totalAmountUsd.toFixed(2)}`,
+      label: 'Completed (USD)',
+      value: `$${stats.completedAmountUsd.toFixed(2)}`,
       color: 'bg-purple-50 border-purple-200',
       textColor: 'text-purple-900',
     },
     {
-      label: 'Total (KES)',
-      value: `KES ${stats.totalAmountKes.toFixed(0)}`,
+      label: 'Completed (KES)',
+      value: `KES ${stats.completedAmountKes.toFixed(0)}`,
       color: 'bg-indigo-50 border-indigo-200',
       textColor: 'text-indigo-900',
+    },
+    {
+      label: 'Failed (USD)',
+      value: `$${stats.failedAmountUsd.toFixed(2)}`,
+      color: 'bg-red-50 border-red-200',
+      textColor: 'text-red-900',
+    },
+    {
+      label: 'Failed (KES)',
+      value: `KES ${stats.failedAmountKes.toFixed(0)}`,
+      color: 'bg-orange-50 border-orange-200',
+      textColor: 'text-orange-900',
     },
   ]
 
