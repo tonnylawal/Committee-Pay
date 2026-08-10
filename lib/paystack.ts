@@ -62,6 +62,16 @@ export interface VerifyTransactionResponse {
   }
 }
 
+export interface PaystackSettlementSummary {
+  settledAmountKes: number
+  pendingAmountKes: number
+}
+
+interface PaystackSettlement {
+  amount?: number
+  status?: string
+}
+
 /**
  * Convert USD to KES using fixed rate
  */
@@ -96,6 +106,48 @@ export async function verifyPaystackTransaction(reference: string): Promise<Veri
   } catch (error: any) {
     console.error('[Paystack] Transaction verification error:', error.response?.data || error.message)
     throw new Error(`Failed to verify Paystack transaction: ${error.message}`)
+  }
+}
+
+/**
+ * Fetch Paystack settlements and summarize amounts in KES.
+ * Paystack amounts are returned in the smallest currency unit (kobo).
+ */
+export async function getPaystackSettlementSummary(): Promise<PaystackSettlementSummary> {
+  try {
+    const client = getPaystackClient()
+    const pageSize = 100
+    let page = 1
+    let settledAmountKes = 0
+    let pendingAmountKes = 0
+
+    while (true) {
+      const response = await client.get<{
+        status: boolean
+        data?: PaystackSettlement[]
+        meta?: { page?: number; perPage?: number; total?: number }
+      }>('/settlement', { params: { page, perPage: pageSize } })
+      const settlements = response.data.data || []
+
+      for (const settlement of settlements) {
+        const amountKes = Number(settlement.amount || 0) / 100
+        if (settlement.status === 'pending') {
+          pendingAmountKes += amountKes
+        } else if (settlement.status === 'success' || settlement.status === 'completed') {
+          settledAmountKes += amountKes
+        }
+      }
+
+      if (settlements.length < pageSize || (response.data.meta?.total && page * pageSize >= response.data.meta.total)) {
+        break
+      }
+      page += 1
+    }
+
+    return { settledAmountKes, pendingAmountKes }
+  } catch (error: any) {
+    console.error('[Paystack] Settlement summary error:', error.response?.data || error.message)
+    return { settledAmountKes: 0, pendingAmountKes: 0 }
   }
 }
 

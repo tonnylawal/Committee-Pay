@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getPaymentLinks, getPaymentStats } from '@/app/actions/payment-links'
+import { getPaystackSettlementSummary } from '@/lib/paystack'
 import CreateLinkForm from '@/components/create-link-form'
 import PaymentLinksTable from '@/components/payment-links-table'
 import StatsOverview from '@/components/stats-overview'
@@ -16,8 +17,11 @@ export default async function DashboardPage() {
     redirect('/sign-in')
   }
 
-  const links = await getPaymentLinks()
-  const stats = await getPaymentStats()
+  const [links, stats, settlements] = await Promise.all([
+    getPaymentLinks(),
+    getPaymentStats(),
+    getPaystackSettlementSummary(),
+  ])
 
   return (
     <div className="p-4 sm:p-6 md:p-8">
@@ -26,7 +30,7 @@ export default async function DashboardPage() {
         <DashboardHeader user={user!} />
 
         {/* Stats Overview */}
-        <StatsOverview stats={stats} />
+        <StatsOverview stats={stats} settlements={settlements} />
 
         {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8 mt-6 sm:mt-8">
