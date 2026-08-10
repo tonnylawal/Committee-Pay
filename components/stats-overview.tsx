@@ -1,4 +1,8 @@
 interface StatsOverviewProps {
+  settlements: {
+    settledAmountKes: number
+    pendingAmountKes: number
+  }
   stats: {
     total: number
     completed: number
@@ -11,7 +15,7 @@ interface StatsOverviewProps {
   }
 }
 
-export default function StatsOverview({ stats }: StatsOverviewProps) {
+export default function StatsOverview({ stats, settlements }: StatsOverviewProps) {
   const statCards = [
     {
       label: 'Total Payments',
@@ -60,6 +64,18 @@ export default function StatsOverview({ stats }: StatsOverviewProps) {
       value: `KES ${stats.failedAmountKes.toFixed(0)}`,
       color: 'bg-orange-50 border-orange-200',
       textColor: 'text-orange-900',
+    },
+    {
+      label: 'Withdrawn / Settled (KES)',
+      value: `KES ${settlements.settledAmountKes.toFixed(0)}`,
+      color: 'bg-teal-50 border-teal-200',
+      textColor: 'text-teal-900',
+    },
+    {
+      label: 'Pending Settlement (KES)',
+      value: `KES ${settlements.pendingAmountKes.toFixed(0)}`,
+      color: 'bg-amber-50 border-amber-200',
+      textColor: 'text-amber-900',
     },
   ]
 
