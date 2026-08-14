@@ -92,6 +92,7 @@ export async function POST(request: NextRequest) {
       data: {
         authorizationUrl: paystackResponse.data.authorization_url,
         accessCode: paystackResponse.data.access_code,
+        publicKey: process.env.PAYSTACK_PUBLIC_KEY,
         reference,
         amountUsd: amount,
         amountKes,

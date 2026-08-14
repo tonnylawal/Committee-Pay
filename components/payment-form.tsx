@@ -1,6 +1,7 @@
 'use client'
 
 import { ChangeEvent, FormEvent, useState, useEffect } from 'react'
+import Script from 'next/script'
 import { useSearchParams } from 'next/navigation'
 
 interface PaymentLink {
@@ -16,6 +17,19 @@ interface PaymentLink {
 
 interface PaymentFormProps {
   link: PaymentLink
+}
+
+declare global {
+  interface Window {
+    PaystackPop?: {
+      setup: (options: {
+        key: string
+        accessCode: string
+        onClose: () => void
+        callback: (response: { reference: string }) => void
+      }) => { openIframe: () => void }
+    }
+  }
 }
 
 export default function PaymentForm({ link }: PaymentFormProps) {
@@ -107,13 +121,26 @@ export default function PaymentForm({ link }: PaymentFormProps) {
         throw new Error(initData.error || 'Failed to initialize payment')
       }
 
-      // Redirect to Paystack
       setPaymentStatus('processing')
 
-      // Use timeout to allow UI to update before redirect
-      setTimeout(() => {
+      if (!window.PaystackPop || !initData.data.publicKey || !initData.data.accessCode) {
         window.location.href = initData.data.authorizationUrl
-      }, 500)
+        return
+      }
+
+      const popup = window.PaystackPop.setup({
+        key: initData.data.publicKey,
+        accessCode: initData.data.accessCode,
+        onClose: () => {
+          setPaymentStatus('idle')
+          setLoading(false)
+        },
+        callback: async ({ reference }) => {
+          await verifyPayment(reference)
+          setLoading(false)
+        },
+      })
+      popup.openIframe()
     } catch (err: any) {
       setError(err.message || 'Failed to process payment')
       setLoading(false)
@@ -167,7 +194,9 @@ export default function PaymentForm({ link }: PaymentFormProps) {
   }
 
   return (
-    <div className="bg-white rounded-lg border border-slate-200 p-4 sm:p-6 md:p-8 shadow-sm max-w-md w-full">
+    <>
+      <Script src="https://js.paystack.co/v2/inline.js" strategy="afterInteractive" />
+      <div className="bg-white rounded-lg border border-slate-200 p-4 sm:p-6 md:p-8 shadow-sm max-w-md w-full">
       {/* Header */}
       <div className="text-center mb-6 sm:mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-2">Payment</h1>
@@ -264,6 +293,7 @@ export default function PaymentForm({ link }: PaymentFormProps) {
       <p className="text-xs text-slate-500 text-center mt-4 sm:mt-6 leading-relaxed">
         Secure payment processing. Your payment information is encrypted and secure.
       </p>
-    </div>
+      </div>
+    </>
   )
 }
