@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { reconcilePaymentReference } from '@/lib/paystack-payment-status'
+import { enforceRateLimit } from '@/lib/rate-limit'
 
 export async function GET(request: NextRequest) {
+  const rateLimitResponse = await enforceRateLimit(request, 'verification')
+  if (rateLimitResponse) return rateLimitResponse
+
   try {
     const { searchParams } = new URL(request.url)
     const reference = searchParams.get('reference')

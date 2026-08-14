@@ -2,8 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createServiceRoleClient } from '@supabase/supabase-js'
 import { v4 as uuidv4 } from 'uuid'
 import { convertUsdToKes, initializePaystackTransaction } from '@/lib/paystack'
+import { enforceRateLimit } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
+  const rateLimitResponse = await enforceRateLimit(request, 'publicPayment')
+  if (rateLimitResponse) return rateLimitResponse
+
   try {
     const body = await request.json()
     const { customPath, email, amountUsd } = body

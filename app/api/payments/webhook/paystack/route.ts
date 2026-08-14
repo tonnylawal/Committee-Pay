@@ -10,8 +10,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing signature' }, { status: 401 })
     }
 
+    // Reject unexpectedly large webhook payloads before parsing.
+    const contentLength = Number(request.headers.get('content-length') || 0)
+    if (contentLength > 256 * 1024) {
+      return NextResponse.json({ error: 'Payload too large' }, { status: 413 })
+    }
+
     // Get raw body for signature verification
     const body = await request.text()
+    if (body.length > 256 * 1024) {
+      return NextResponse.json({ error: 'Payload too large' }, { status: 413 })
+    }
     
     // Validate signature
     try {
@@ -52,7 +61,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ received: true })
   } catch (error: any) {
     console.error('[Webhook] Error processing webhook:', error)
-    // Return 200 to prevent Paystack from retrying
-    return NextResponse.json({ received: true, error: error.message }, { status: 200 })
+    // Return a non-2xx response so Paystack can retry transient failures.
+    return NextResponse.json({ received: false, error: 'Webhook processing failed' }, { status: 500 })
   }
 }

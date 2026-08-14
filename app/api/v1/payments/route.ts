@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { authenticateApiRequest, hasPermission, unauthorized, forbidden } from '@/lib/api-middleware'
+import { enforceRateLimit } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
   const authResult = await authenticateApiRequest(request)
+  const rateLimitResponse = await enforceRateLimit(request, 'api', authResult.apiKey?.id)
+  if (rateLimitResponse) return rateLimitResponse
   if (!authResult.success) return unauthorized(authResult.error)
   const { apiKey } = authResult
   if (!apiKey || !hasPermission(apiKey.permissions, 'create:payments')) {
@@ -81,6 +84,9 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
+  const rateLimitResponse = await enforceRateLimit(request, 'api')
+  if (rateLimitResponse) return rateLimitResponse
+
   // Authenticate API key
   const authResult = await authenticateApiRequest(request)
   if (!authResult.success) {
