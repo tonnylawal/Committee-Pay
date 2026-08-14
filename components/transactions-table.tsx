@@ -143,10 +143,10 @@ export default function TransactionsTable({ transactions }: TransactionsTablePro
                 </tr>
               ) : (
                 filteredTransactions.map((transaction) => (
-                  <tr key={transaction.id} className="hover:bg-slate-50 transition">
+                  <tr key={transaction.id} className="hover:bg-slate-50 transition align-top">
                     <td className="px-3 sm:px-6 py-3 sm:py-4">
                       <div>
-                        <p className="font-medium text-xs sm:text-sm text-slate-900 truncate">
+                        <p className="font-medium text-xs sm:text-sm text-slate-900 break-all">
                           {transaction.customer_email}
                         </p>
                         {transaction.payment_links?.custom_path && (
@@ -176,7 +176,7 @@ export default function TransactionsTable({ transactions }: TransactionsTablePro
                       </span>
                     </td>
                     <td className="px-3 sm:px-6 py-3 sm:py-4 hidden md:table-cell">
-                      <p className="text-xs text-slate-600 truncate font-mono">
+                      <p className="text-xs text-slate-600 break-all font-mono">
                         {transaction.reference_id}
                       </p>
                     </td>
