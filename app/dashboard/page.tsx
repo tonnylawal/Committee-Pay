@@ -35,7 +35,7 @@ export default async function DashboardPage() {
         {/* Stats Overview */}
         <StatsOverview stats={stats} settlements={settlements} />
 
-        <div className="mt-6 sm:mt-8">
+        <div id="payment-settings" className="mt-6 scroll-mt-6 sm:mt-8">
           <PlatformSettingsForm initialSettings={settings} />
         </div>
 

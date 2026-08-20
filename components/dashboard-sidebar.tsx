@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, CreditCard, Key, Webhook, BookOpen, Users } from 'lucide-react'
+import { LayoutDashboard, CreditCard, Key, Webhook, BookOpen, Users, Settings } from 'lucide-react'
 
 const navItems = [
   {
@@ -29,6 +29,11 @@ const navItems = [
     label: 'Webhook Setup',
     href: '/dashboard/webhook-setup',
     icon: Webhook,
+  },
+  {
+    label: 'Payment Settings',
+    href: '/dashboard#payment-settings',
+    icon: Settings,
   },
   {
     label: 'API Documentation',
