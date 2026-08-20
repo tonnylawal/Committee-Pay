@@ -14,6 +14,11 @@ interface PaymentLink {
   minimum_amount_usd?: number
   description?: string
   is_active: boolean
+  created_at?: string
+  theme_primary_color?: string | null
+  theme_background_color?: string | null
+  theme_text_color?: string | null
+  theme_accent_color?: string | null
 }
 
 interface PaymentLinksTableProps {

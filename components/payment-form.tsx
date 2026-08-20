@@ -17,6 +17,7 @@ interface PaymentLink {
 
 interface PaymentFormProps {
   link: PaymentLink
+  theme?: { primary: string; background: string; text: string; accent: string }
 }
 
 declare global {
@@ -32,7 +33,7 @@ declare global {
   }
 }
 
-export default function PaymentForm({ link }: PaymentFormProps) {
+export default function PaymentForm({ link, theme }: PaymentFormProps) {
   const [email, setEmail] = useState('')
   const [amountUsd, setAmountUsd] = useState('')
   const [loading, setLoading] = useState(false)
@@ -196,10 +197,10 @@ export default function PaymentForm({ link }: PaymentFormProps) {
   return (
     <>
       <Script src="https://js.paystack.co/v2/inline.js" strategy="afterInteractive" />
-      <div className="bg-white rounded-lg border border-slate-200 p-4 sm:p-6 md:p-8 shadow-sm max-w-md w-full">
+      <div className="rounded-lg border border-slate-200 p-4 sm:p-6 md:p-8 shadow-sm max-w-md w-full" style={{ backgroundColor: theme?.background || '#ffffff' }}>
       {/* Header */}
       <div className="text-center mb-6 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-2">Payment</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold mb-2" style={{ color: theme?.text || '#0f172a' }}>Payment</h1>
         {link.description && <p className="text-sm sm:text-base text-slate-600">{link.description}</p>}
       </div>
 
@@ -276,7 +277,7 @@ export default function PaymentForm({ link }: PaymentFormProps) {
             !email.trim() ||
             ((link.amount_type || (link.is_flexible_amount ? 'flexible' : 'fixed')) === 'flexible' && !amountUsd)
           }
-          className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-400 text-white font-semibold py-2 sm:py-3 px-3 sm:px-4 rounded-md transition duration-200 text-sm sm:text-base"
+          className="w-full disabled:bg-slate-400 text-white font-semibold py-2 sm:py-3 px-3 sm:px-4 rounded-md transition duration-200 text-sm sm:text-base" style={{ backgroundColor: theme?.primary || '#2563eb' }}
         >
           {(() => {
             const amountType = link.amount_type || (link.is_flexible_amount ? 'flexible' : 'fixed')
