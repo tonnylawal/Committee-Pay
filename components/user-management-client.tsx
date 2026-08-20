@@ -127,22 +127,28 @@ export default function UserManagementClient() {
   }
 
   const handleUpdateRole = async (userId: string, newRole: string) => {
+    setError('')
+    setSuccess('')
+    setBusyUser(userId)
     try {
       const response = await fetch(`/api/dashboard/users/${userId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ role: newRole }),
       })
+      const data = await response.json().catch(() => ({}))
 
       if (!response.ok) {
-        setError('Failed to update user role')
+        setError(data.error || `Failed to update user role (${response.status})`)
         return
       }
 
       setSuccess('User role updated successfully')
       await fetchUsers()
     } catch (err: any) {
-      setError('Failed to update user role')
+      setError(err.message || 'Failed to update user role')
+    } finally {
+      setBusyUser(null)
     }
   }
 

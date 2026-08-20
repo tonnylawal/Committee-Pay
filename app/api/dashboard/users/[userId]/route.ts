@@ -55,7 +55,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     if (error) return NextResponse.json({ error: 'Failed to update authentication email' }, { status: 400 })
   }
   const { data: updatedUser, error } = await adminSupabase.from('users').update(updateData).eq('id', userId).select().single()
-  if (error) return NextResponse.json({ error: 'Failed to update user' }, { status: 500 })
+  if (error) {
+    console.error('[v0] Failed to update user role/profile:', error)
+    return NextResponse.json({ error: error.message || 'Failed to update user' }, { status: 500 })
+  }
   return NextResponse.json(updatedUser)
 }
 
