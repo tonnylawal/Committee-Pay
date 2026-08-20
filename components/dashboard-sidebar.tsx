@@ -36,6 +36,11 @@ const navItems = [
     icon: Headset,
   },
   {
+    label: 'Training Center',
+    href: '/dashboard/training',
+    icon: BookOpen,
+  },
+  {
     label: 'API Keys',
     href: '/dashboard/api-keys',
     icon: Key,
