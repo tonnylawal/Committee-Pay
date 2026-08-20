@@ -23,6 +23,60 @@ export default function UserManagementClient() {
   })
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [editingEmail, setEditingEmail] = useState<string | null>(null)
+  const [emailDraft, setEmailDraft] = useState('')
+  const [busyUser, setBusyUser] = useState<string | null>(null)
+
+  const runUserAction = async (userId: string, action: string, label: string) => {
+    setError('')
+    setSuccess('')
+    setBusyUser(userId)
+    try {
+      const response = await fetch(`/api/dashboard/users/${userId}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action }) })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error || `Failed to ${label.toLowerCase()}`)
+      setSuccess(data.message || `${label} completed`)
+      await fetchUsers()
+    } catch (err: any) {
+      setError(err.message || `Failed to ${label.toLowerCase()}`)
+    } finally {
+      setBusyUser(null)
+    }
+  }
+
+  const updateEmail = async (userId: string) => {
+    setError('')
+    setSuccess('')
+    setBusyUser(userId)
+    try {
+      const response = await fetch(`/api/dashboard/users/${userId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: emailDraft }) })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error || 'Failed to update email')
+      setSuccess('Email updated successfully')
+      setEditingEmail(null)
+      await fetchUsers()
+    } catch (err: any) {
+      setError(err.message || 'Failed to update email')
+    } finally {
+      setBusyUser(null)
+    }
+  }
+
+  const removeUser = async (user: User) => {
+    if (!window.confirm(`Remove ${user.email}? This permanently deletes their account.`)) return
+    setBusyUser(user.id)
+    try {
+      const response = await fetch(`/api/dashboard/users/${user.id}`, { method: 'DELETE' })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error || 'Failed to remove user')
+      setSuccess('User removed successfully')
+      await fetchUsers()
+    } catch (err: any) {
+      setError(err.message || 'Failed to remove user')
+    } finally {
+      setBusyUser(null)
+    }
+  }
 
   useEffect(() => {
     fetchUsers()
@@ -229,7 +283,15 @@ export default function UserManagementClient() {
               <tbody className="divide-y divide-slate-200">
                 {users.map((user) => (
                   <tr key={user.id} className="hover:bg-slate-50">
-                    <td className="px-6 py-4 text-sm font-medium text-slate-900">{user.email}</td>
+                    <td className="px-6 py-4 text-sm font-medium text-slate-900">
+                      {editingEmail === user.id ? (
+                        <div className="flex min-w-64 gap-2">
+                          <input value={emailDraft} onChange={(e) => setEmailDraft(e.target.value)} type="email" className="w-full rounded border border-slate-300 px-2 py-1" aria-label={`Email for ${user.email}`} />
+                          <button type="button" onClick={() => updateEmail(user.id)} disabled={busyUser === user.id} className="text-green-700">Save</button>
+                          <button type="button" onClick={() => setEditingEmail(null)} className="text-slate-500">Cancel</button>
+                        </div>
+                      ) : user.email}
+                    </td>
                     <td className="px-6 py-4 text-sm text-slate-600">{user.full_name || '-'}</td>
                     <td className="px-6 py-4 text-sm">
                       <select
@@ -251,12 +313,13 @@ export default function UserManagementClient() {
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-600">{new Date(user.created_at).toLocaleDateString()}</td>
                     <td className="px-6 py-4 text-sm">
-                      <button
-                        onClick={() => handleToggleActive(user.id, user.is_active)}
-                        className="text-blue-600 hover:text-blue-700 font-medium text-sm"
-                      >
-                        {user.is_active ? 'Deactivate' : 'Activate'}
-                      </button>
+                      <div className="flex min-w-56 flex-wrap gap-x-3 gap-y-2">
+                        <button onClick={() => handleToggleActive(user.id, user.is_active)} disabled={user.email.toLowerCase() === 'info@iicar.org'} className="text-blue-600 hover:text-blue-700 font-medium text-sm disabled:cursor-not-allowed disabled:text-slate-300">{user.is_active ? 'Ban' : 'Unban'}</button>
+                        <button onClick={() => { setEditingEmail(user.id); setEmailDraft(user.email) }} disabled={user.email.toLowerCase() === 'info@iicar.org'} className="text-slate-700 hover:text-slate-900 font-medium text-sm disabled:cursor-not-allowed disabled:text-slate-300">Edit email</button>
+                        <button onClick={() => runUserAction(user.id, 'password_reset', 'Password reset')} disabled={busyUser === user.id} className="text-slate-700 hover:text-slate-900 font-medium text-sm">Reset password</button>
+                        <button onClick={() => runUserAction(user.id, 'verification', 'Verification')} disabled={busyUser === user.id} className="text-slate-700 hover:text-slate-900 font-medium text-sm">Send verification</button>
+                        <button onClick={() => removeUser(user)} disabled={user.email.toLowerCase() === 'info@iicar.org' || busyUser === user.id} className="text-red-600 hover:text-red-700 font-medium text-sm disabled:cursor-not-allowed disabled:text-slate-300">Remove</button>
+                      </div>
                     </td>
                   </tr>
                 ))}
