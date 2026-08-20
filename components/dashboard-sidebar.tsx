@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, CreditCard, Key, Webhook, BookOpen, Users, Settings } from 'lucide-react'
+import { LayoutDashboard, CreditCard, Key, Webhook, BookOpen, Users, Settings, ShieldCheck, Headset } from 'lucide-react'
 
 const navItems = [
   {
@@ -19,6 +19,21 @@ const navItems = [
     label: 'Users',
     href: '/dashboard/users',
     icon: Users,
+  },
+  {
+    label: 'Audit Logs',
+    href: '/dashboard/audit-logs',
+    icon: Settings,
+  },
+  {
+    label: 'Security',
+    href: '/dashboard/security',
+    icon: ShieldCheck,
+  },
+  {
+    label: 'Customer Support',
+    href: '/dashboard/support',
+    icon: Headset,
   },
   {
     label: 'API Keys',

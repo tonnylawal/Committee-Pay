@@ -3,11 +3,13 @@ import { createClient } from '@/lib/supabase/server'
 import { getPaymentLinks, getPaymentStats } from '@/app/actions/payment-links'
 import { getPaystackSettlementSummary } from '@/lib/paystack'
 import { getPlatformSettings } from '@/app/actions/platform-settings'
+import { getDashboardAnalytics } from '@/app/actions/analytics'
 import CreateLinkForm from '@/components/create-link-form'
 import PlatformSettingsForm from '@/components/platform-settings-form'
 import PaymentLinksTable from '@/components/payment-links-table'
 import StatsOverview from '@/components/stats-overview'
 import DashboardHeader from '@/components/dashboard-header'
+import DashboardAnalytics from '@/components/dashboard-analytics'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -19,11 +21,12 @@ export default async function DashboardPage() {
     redirect('/sign-in')
   }
 
-  const [links, stats, settlements, settings] = await Promise.all([
+  const [links, stats, settlements, settings, analytics] = await Promise.all([
     getPaymentLinks(),
     getPaymentStats(),
     getPaystackSettlementSummary(),
     getPlatformSettings(),
+    getDashboardAnalytics(30),
   ])
 
   return (
@@ -34,6 +37,8 @@ export default async function DashboardPage() {
 
         {/* Stats Overview */}
         <StatsOverview stats={stats} settlements={settlements} />
+
+        <DashboardAnalytics initialData={analytics} />
 
         <div id="payment-settings" className="mt-6 scroll-mt-6 sm:mt-8">
           <PlatformSettingsForm initialSettings={settings} />

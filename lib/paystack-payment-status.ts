@@ -116,14 +116,24 @@ export async function reconcilePendingPayments(limit = 25) {
 export async function applyWebhookPaymentStatus(reference: string, paystackStatus?: string | null) {
   const supabase = getServiceRoleClient()
   const status = normalizePaystackStatus(paystackStatus)
+  const { data: payment, error: fetchError } = await supabase
+    .from('payments')
+    .select('id, reference_id, status')
+    .eq('reference_id', reference)
+    .maybeSingle()
+
+  if (fetchError) throw fetchError
+  if (!payment) return null
+
+  // Paystack retries and out-of-order events are common. Never let a later
+  // pending/failed event move a completed payment backwards.
+  if (payment.status === 'completed' || payment.status === status) return payment.status
 
   const { error } = await supabase
     .from('payments')
-    .update({
-      status,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('reference_id', reference)
+    .update({ status, updated_at: new Date().toISOString() })
+    .eq('id', payment.id)
+    .neq('status', 'completed')
 
   if (error) throw error
   return status

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { supabase as adminSupabase } from '@/lib/db'
+import { requestAuditContext, writeAuditLog } from '@/lib/audit-log'
 
 export async function GET() {
   const supabase = await createClient()
@@ -25,7 +26,7 @@ export async function GET() {
     }
 
     // Fetch all users
-    const { data: users, error } = await supabase
+    const { data: users, error } = await adminSupabase
       .from('users')
       .select('id, email, full_name, role, is_active, created_at')
       .order('created_at', { ascending: false })
@@ -78,7 +79,7 @@ export async function POST(request: NextRequest) {
     // Create auth user with a temporary password
     const tempPassword = Math.random().toString(36).slice(-12)
 
-    const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
+    const { data: authUser, error: authError } = await adminSupabase.auth.admin.createUser({
       email,
       password: tempPassword,
       email_confirm: true,
@@ -90,7 +91,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Insert user record in database
-    const { data: dbUser, error: dbError } = await supabase
+    const { data: dbUser, error: dbError } = await adminSupabase
       .from('users')
       .insert({
         id: authUser.user.id,
@@ -105,7 +106,7 @@ export async function POST(request: NextRequest) {
     if (dbError) {
       console.error('[v0] Error creating database user:', dbError)
       // Clean up auth user if database insert fails
-      await supabase.auth.admin.deleteUser(authUser.user.id)
+      await adminSupabase.auth.admin.deleteUser(authUser.user.id)
       return NextResponse.json({ error: 'Failed to create user in database' }, { status: 500 })
     }
 
@@ -114,6 +115,8 @@ export async function POST(request: NextRequest) {
       email: dbUser.email,
       role: dbUser.role,
     })
+
+    await writeAuditLog({ actorId: user.id, actorEmail: user.email, action: 'user.created', targetType: 'user', targetId: dbUser.id, targetLabel: dbUser.email, metadata: { role: dbUser.role }, ...requestAuditContext(request) })
 
     return NextResponse.json(
       {
