@@ -157,7 +157,7 @@ export default function TransactionsTable({ transactions }: TransactionsTablePro
                 <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-semibold text-slate-700">Amount (KES)</th>
                 <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-semibold text-slate-700 hidden sm:table-cell">Status</th>
                 <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-semibold text-slate-700 hidden md:table-cell">Reference</th>
-                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-semibold text-slate-700 hidden lg:table-cell">Date &amp; time</th>
+                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-semibold text-slate-700">Date &amp; time</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200">
@@ -206,8 +206,8 @@ export default function TransactionsTable({ transactions }: TransactionsTablePro
                         {transaction.reference_id}
                       </p>
                     </td>
-                    <td className="px-3 sm:px-6 py-3 sm:py-4 hidden lg:table-cell">
-                      <p className="text-xs sm:text-sm text-slate-600" suppressHydrationWarning>
+                    <td className="px-3 sm:px-6 py-3 sm:py-4">
+                      <p className="text-xs sm:text-sm text-slate-600 whitespace-nowrap" suppressHydrationWarning>
                         {formatDate(transaction.created_at)}
                       </p>
                     </td>
