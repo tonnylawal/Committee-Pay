@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { supabase as adminSupabase } from '@/lib/db'
 
 export async function GET() {
   const supabase = await createClient()
@@ -13,7 +14,7 @@ export async function GET() {
 
   try {
     // Check if user is admin
-    const { data: adminUser } = await supabase
+    const { data: adminUser } = await adminSupabase
       .from('users')
       .select('role')
       .eq('id', user.id)
@@ -53,7 +54,7 @@ export async function POST(request: NextRequest) {
 
   try {
     // Check if user is admin
-    const { data: adminUser } = await supabase
+    const { data: adminUser } = await adminSupabase
       .from('users')
       .select('role')
       .eq('id', user.id)
