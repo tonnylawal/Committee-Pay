@@ -24,14 +24,22 @@ export default function AuthForm({ mode }: AuthFormProps) {
       const supabase = createClient()
 
       if (mode === 'sign-in') {
+        const checkResponse = await fetch('/api/auth/sign-in-check', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) })
+        if (!checkResponse.ok) {
+          const checkData = await checkResponse.json().catch(() => ({}))
+          setError(checkData.error || 'Too many sign-in attempts. Please try again later.')
+          return
+        }
         const { error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
         })
 
         if (signInError) {
+          void fetch('/api/auth/sign-in-check', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, result: 'failure', reason: signInError.message }) })
           setError(signInError.message || 'Sign in failed')
         } else {
+          void fetch('/api/auth/sign-in-check', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, result: 'success' }) })
           router.push('/dashboard')
           router.refresh()
         }
