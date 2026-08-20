@@ -22,6 +22,21 @@ interface TransactionsTableProps {
   transactions: Transaction[]
 }
 
+type DateRange = 'all' | '24h' | '7d' | '14d' | '21d' | '30d' | '2m' | '3m' | '6m' | '12m'
+
+const DATE_RANGES: Array<{ value: DateRange; label: string; days?: number }> = [
+  { value: 'all', label: 'All time' },
+  { value: '24h', label: 'Last 24 hours', days: 1 },
+  { value: '7d', label: 'Last 7 days', days: 7 },
+  { value: '14d', label: 'Last 14 days', days: 14 },
+  { value: '21d', label: 'Last 21 days', days: 21 },
+  { value: '30d', label: 'Last 30 days', days: 30 },
+  { value: '2m', label: 'Last 2 months', days: 60 },
+  { value: '3m', label: 'Last 3 months', days: 90 },
+  { value: '6m', label: 'Last 6 months', days: 180 },
+  { value: '12m', label: 'Last 12 months', days: 365 },
+]
+
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('en-US', {
     year: 'numeric',
@@ -47,12 +62,15 @@ const getStatusColor = (status: string) => {
 
 export default function TransactionsTable({ transactions }: TransactionsTableProps) {
   const [filter, setFilter] = useState<'all' | 'completed' | 'pending' | 'failed'>('all')
+  const [dateRange, setDateRange] = useState<DateRange>('all')
   const [searchEmail, setSearchEmail] = useState('')
 
   const filteredTransactions = transactions.filter((tx) => {
     const matchesStatus = filter === 'all' || tx.status === filter
     const matchesEmail = tx.customer_email.toLowerCase().includes(searchEmail.toLowerCase())
-    return matchesStatus && matchesEmail
+    const selectedRange = DATE_RANGES.find((range) => range.value === dateRange)
+    const matchesDate = !selectedRange?.days || new Date(tx.created_at).getTime() >= Date.now() - selectedRange.days * 24 * 60 * 60 * 1000
+    return matchesStatus && matchesEmail && matchesDate
   })
 
   if (transactions.length === 0) {
@@ -109,6 +127,14 @@ export default function TransactionsTable({ transactions }: TransactionsTablePro
             Failed
           </button>
         </div>
+        <select
+          value={dateRange}
+          onChange={(event) => setDateRange(event.target.value as DateRange)}
+          className="w-full sm:w-auto px-3 sm:px-4 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          aria-label="Filter payments by date"
+        >
+          {DATE_RANGES.map((range) => <option key={range.value} value={range.value}>{range.label}</option>)}
+        </select>
         <div className="flex-1">
           <input
             type="email"

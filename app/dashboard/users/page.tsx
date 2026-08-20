@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { supabase as adminSupabase } from '@/lib/db'
 import UserManagementClient from '@/components/user-management-client'
 
 export default async function UsersPage() {
@@ -13,20 +14,15 @@ export default async function UsersPage() {
   }
 
   // Check if user is admin
-  const { data: userData } = await supabase
+  const { data: userData } = await adminSupabase
     .from('users')
-    .select('role')
+    .select('role, is_active')
     .eq('id', user.id)
-    .single()
+    .maybeSingle()
 
   // If no user record exists yet, treat as viewer (redirect)
   // If user exists and is not admin, redirect to dashboard
-  if (userData && userData.role !== 'admin') {
-    redirect('/dashboard')
-  }
-  
-  // If userData is null, user hasn't been created yet, redirect them
-  if (!userData) {
+  if (!userData || userData.role !== 'admin' || userData.is_active === false) {
     redirect('/dashboard')
   }
 
