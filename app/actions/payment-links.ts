@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { writeAuditLog } from '@/lib/audit-log'
 
 const HEX_COLOR = /^#[0-9a-fA-F]{6}$/
 
@@ -67,7 +68,10 @@ export async function createPaymentLink(
       .select()
 
     if (error) throw error
-    return newLink?.[0]
+    const created = newLink?.[0]
+    const { data: { user } } = await supabase.auth.getUser()
+    if (created) await writeAuditLog({ actorId: user?.id, actorEmail: user?.email, action: 'payment_link.created', targetType: 'payment_link', targetId: String(created.id), targetLabel: created.custom_path, metadata: { amountType: created.amount_type, isActive: created.is_active } })
+    return created
   } catch (error: any) {
     console.error('[Action] Create payment link error:', error)
     throw error
@@ -100,7 +104,10 @@ export async function updatePaymentLink(
       .select()
 
     if (error) throw error
-    return updated?.[0]
+    const changed = updated?.[0]
+    const { data: { user } } = await supabase.auth.getUser()
+    if (changed) await writeAuditLog({ actorId: user?.id, actorEmail: user?.email, action: updates.is_active === false ? 'payment_link.disabled' : updates.is_active === true ? 'payment_link.activated' : 'payment_link.updated', targetType: 'payment_link', targetId: String(changed.id), targetLabel: changed.custom_path, metadata: { changedFields: Object.keys(updates), isActive: changed.is_active } })
+    return changed
   } catch (error: any) {
     console.error('[Action] Update payment link error:', error)
     throw new Error('Failed to update payment link')
@@ -116,6 +123,8 @@ export async function disablePaymentLink(id: number) {
       .eq('id', id)
 
     if (error) throw error
+    const { data: { user } } = await supabase.auth.getUser()
+    await writeAuditLog({ actorId: user?.id, actorEmail: user?.email, action: 'payment_link.disabled', targetType: 'payment_link', targetId: String(id), metadata: { isActive: false } })
     return { success: true }
   } catch (error: any) {
     console.error('[Action] Disable payment link error:', error)
@@ -132,6 +141,8 @@ export async function activatePaymentLink(id: number) {
       .eq('id', id)
 
     if (error) throw error
+    const { data: { user } } = await supabase.auth.getUser()
+    await writeAuditLog({ actorId: user?.id, actorEmail: user?.email, action: 'payment_link.activated', targetType: 'payment_link', targetId: String(id), metadata: { isActive: true } })
     return { success: true }
   } catch (error: any) {
     console.error('[Action] Activate payment link error:', error)
@@ -148,6 +159,8 @@ export async function deletePaymentLink(id: number) {
       .eq('id', id)
 
     if (error) throw error
+    const { data: { user } } = await supabase.auth.getUser()
+    await writeAuditLog({ actorId: user?.id, actorEmail: user?.email, action: 'payment_link.deleted', targetType: 'payment_link', targetId: String(id) })
     return { success: true }
   } catch (error: any) {
     console.error('[Action] Delete payment link error:', error)

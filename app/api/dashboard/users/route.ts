@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { supabase as adminSupabase } from '@/lib/db'
+import { requestAuditContext, writeAuditLog } from '@/lib/audit-log'
 
 export async function GET() {
   const supabase = await createClient()
@@ -114,6 +115,8 @@ export async function POST(request: NextRequest) {
       email: dbUser.email,
       role: dbUser.role,
     })
+
+    await writeAuditLog({ actorId: user.id, actorEmail: user.email, action: 'user.created', targetType: 'user', targetId: dbUser.id, targetLabel: dbUser.email, metadata: { role: dbUser.role }, ...requestAuditContext(request) })
 
     return NextResponse.json(
       {

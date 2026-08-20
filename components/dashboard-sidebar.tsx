@@ -21,6 +21,11 @@ const navItems = [
     icon: Users,
   },
   {
+    label: 'Audit Logs',
+    href: '/dashboard/audit-logs',
+    icon: Settings,
+  },
+  {
     label: 'API Keys',
     href: '/dashboard/api-keys',
     icon: Key,
