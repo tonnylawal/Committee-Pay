@@ -3,7 +3,10 @@
 import Link from 'next/link'
 import { Lock, Home, Calendar } from 'lucide-react'
 
-export default function PaymentInactivePage() {
+export default function PaymentInactivePage({ message, supportEmail }: { message?: string; supportEmail?: string }) {
+  const outageMessage = message || 'Our systems are currently down and we might not be able to process your payment. Please contact support for an alternative payment method.'
+  const email = supportEmail || 'support@alghahim.com'
+
   return (
     <main className="min-h-screen bg-gradient-to-br from-amber-50 via-white to-slate-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
@@ -28,7 +31,7 @@ export default function PaymentInactivePage() {
               Payment Link Deactivated
             </h1>
             <p className="text-slate-600 text-base sm:text-lg mb-2 text-balance">
-              This payment link is no longer active and cannot process payments at this time.
+              {outageMessage}
             </p>
             <p className="text-slate-500 text-sm">
               The merchant may have deactivated this link or it may have expired.
@@ -67,7 +70,7 @@ export default function PaymentInactivePage() {
             </p>
             <div className="space-y-2">
               <a
-                href="mailto:support@alghahim.com"
+                href={`mailto:${email}`}
                 className="block text-sm text-blue-600 hover:text-blue-700 font-medium"
               >
                 → Contact Support

@@ -2,6 +2,8 @@
 
 import { createClient } from '@/lib/supabase/server'
 
+const HEX_COLOR = /^#[0-9a-fA-F]{6}$/
+
 export async function getPaymentLinks() {
   try {
     const supabase = await createClient()
@@ -79,9 +81,17 @@ export async function updatePaymentLink(
     is_active?: boolean
     amount_usd?: number
     minimum_amount_usd?: number
+    theme_primary_color?: string | null
+    theme_background_color?: string | null
+    theme_text_color?: string | null
+    theme_accent_color?: string | null
   },
 ) {
   try {
+    for (const key of ['theme_primary_color', 'theme_background_color', 'theme_text_color', 'theme_accent_color'] as const) {
+      const value = updates[key]
+      if (value !== undefined && value !== null && !HEX_COLOR.test(value)) throw new Error('Theme colors must be six-digit hex values')
+    }
     const supabase = await createClient()
     const { data: updated, error } = await supabase
       .from('payment_links')

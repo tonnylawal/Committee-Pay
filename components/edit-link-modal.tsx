@@ -12,6 +12,10 @@ interface PaymentLink {
   minimum_amount_usd?: number
   description?: string
   is_active: boolean
+  theme_primary_color?: string | null
+  theme_background_color?: string | null
+  theme_text_color?: string | null
+  theme_accent_color?: string | null
 }
 
 interface EditLinkModalProps {
@@ -23,6 +27,12 @@ export default function EditLinkModal({ link, onClose }: EditLinkModalProps) {
   const [description, setDescription] = useState(link.description || '')
   const [fixedAmount, setFixedAmount] = useState(link.amount_usd?.toString() || '')
   const [minimumAmount, setMinimumAmount] = useState((link.minimum_amount_usd || 20).toString())
+  const [colors, setColors] = useState({
+    primary: link.theme_primary_color || '',
+    background: link.theme_background_color || '',
+    text: link.theme_text_color || '',
+    accent: link.theme_accent_color || '',
+  })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
@@ -34,7 +44,13 @@ export default function EditLinkModal({ link, onClose }: EditLinkModalProps) {
     setLoading(true)
 
     try {
-      const updates: any = { description }
+      const updates: any = {
+        description,
+        theme_primary_color: colors.primary || null,
+        theme_background_color: colors.background || null,
+        theme_text_color: colors.text || null,
+        theme_accent_color: colors.accent || null,
+      }
 
       if (amountType === 'fixed') {
         const amount = parseFloat(fixedAmount)
@@ -129,6 +145,20 @@ export default function EditLinkModal({ link, onClose }: EditLinkModalProps) {
               <p className="mt-1 text-xs text-slate-500">Customers must pay at least this amount</p>
             </div>
           )}
+
+          <div>
+            <p className="mb-2 text-sm font-medium text-slate-700">Link colors (optional)</p>
+            <p className="mb-3 text-xs text-slate-500">Leave blank to use the global payment page theme.</p>
+            <div className="grid grid-cols-2 gap-3">
+              {(['primary', 'background', 'text', 'accent'] as const).map((key) => (
+                <label key={key} className="flex items-center gap-2 text-xs text-slate-600">
+                  <input type="color" value={colors[key] || '#ffffff'} onChange={(event) => setColors((current) => ({ ...current, [key]: event.target.value }))} className="size-8 rounded border border-slate-300 p-1" aria-label={`${key} color`} />
+                  <span className="capitalize">{key}</span>
+                  <button type="button" onClick={() => setColors((current) => ({ ...current, [key]: '' }))} className="text-slate-400 hover:text-slate-700" aria-label={`Clear ${key} override`}>Clear</button>
+                </label>
+              ))}
+            </div>
+          </div>
 
           {error && <div className="bg-red-50 border border-red-200 text-red-800 p-3 rounded-md text-sm">{error}</div>}
         </div>
