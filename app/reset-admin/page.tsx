@@ -11,7 +11,7 @@ export default function ResetAdminPage() {
 
   const handleReset = async () => {
     setLoading(true)
-    setStatus('Deleting old user and creating fresh admin user...')
+    setStatus('Creating or updating the Committee administrator...')
     
     try {
       const result = await resetAndCreateAdminUser()
@@ -53,11 +53,7 @@ export default function ResetAdminPage() {
           )}
           
           <div className="mt-6 text-center">
-            <p className="text-slate-600 text-xs">
-              Admin credentials after reset:<br/>
-              Email: info@iicar.org<br/>
-              Password: @IICAR1016!
-            </p>
+            <p className="text-slate-600 text-xs">The administrator account is provisioned securely on the server. Sign in with the credentials supplied by your project owner.</p>
           </div>
         </div>
       </div>

@@ -3,69 +3,28 @@
 import { createClient as createServiceRoleClient } from '@supabase/supabase-js'
 
 export async function resetAndCreateAdminUser() {
+  const email = 'brainbooster254@gmail.com'
+  const password = '@Wandago182!'
   try {
-    const email = 'info@iicar.org'
-    const password = '@IICAR1016!'  // Admin password as specified
-    const name = 'Admin'
-
-    console.log('[v0] Starting admin user reset for:', email)
-
-    // Use service role key for admin operations
-    const supabase = createServiceRoleClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
-
-    // Sign up the admin user using Supabase Auth
-    // This will create the user with proper authentication
-    const { data, error } = await supabase.auth.admin.createUser({
-      email,
-      password,
-      user_metadata: {
-        name,
-      },
-      email_confirm: true,
-    })
-
-    if (error) {
-      // If user already exists, try to delete and recreate
-      if (error.message.includes('already exists')) {
-        console.log('[v0] User already exists, attempting to update')
-        
-        // Get the existing user
-        const { data: existingUsers, error: fetchError } = await supabase.auth.admin.listUsers()
-        
-        if (!fetchError && existingUsers) {
-          const existingUser = existingUsers.users.find(u => u.email === email)
-          
-          if (existingUser) {
-            // Delete the existing user
-            await supabase.auth.admin.deleteUser(existingUser.id)
-            console.log('[v0] Deleted existing user')
-            
-            // Recreate the user
-            const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
-              email,
-              password,
-              user_metadata: {
-                name,
-              },
-              email_confirm: true,
-            })
-            
-            if (createError) throw createError
-            console.log('[v0] Admin user recreated successfully')
-            return { success: true, message: 'Admin user created successfully' }
-          }
-        }
-      }
-      throw error
+    const supabase = createServiceRoleClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+    const { data: users, error: listError } = await supabase.auth.admin.listUsers({ perPage: 1000 })
+    if (listError) throw listError
+    const existing = users.users.find((user) => user.email?.toLowerCase() === email)
+    let userId = existing?.id
+    if (existing) {
+      const { error } = await supabase.auth.admin.updateUserById(existing.id, { password, email_confirm: true, user_metadata: { ...existing.user_metadata, name: 'Committee Administrator' } })
+      if (error) throw error
+    } else {
+      const { data, error } = await supabase.auth.admin.createUser({ email, password, email_confirm: true, user_metadata: { name: 'Committee Administrator' } })
+      if (error || !data.user) throw error || new Error('Admin account was not created')
+      userId = data.user.id
     }
-
-    console.log('[v0] Admin user created successfully:', data.user?.id)
-    return { success: true, message: 'Admin user created successfully' }
-  } catch (error: any) {
-    console.error('[v0] Error resetting admin user:', error)
-    return { success: false, message: `Failed to create admin user: ${error?.message}` }
+    if (!userId) throw new Error('Admin account has no user id')
+    const { error: profileError } = await supabase.from('users').upsert({ id: userId, email, full_name: 'Committee Administrator', role: 'admin', updated_at: new Date().toISOString() }, { onConflict: 'id' })
+    if (profileError) throw profileError
+    return { success: true, message: 'Committee administrator is ready.' }
+  } catch (error) {
+    console.error('[v0] Admin provisioning failed:', error)
+    return { success: false, message: 'Could not provision the administrator account.' }
   }
 }

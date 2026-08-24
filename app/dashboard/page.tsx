@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getPaymentLinks, getPaymentStats } from '@/app/actions/payment-links'
 import { getPaystackSettlementSummary } from '@/lib/paystack'
-import { getPlatformSettings } from '@/app/actions/platform-settings'
+import { getAdminConfig, getPlatformSettings } from '@/app/actions/platform-settings'
 import { getDashboardAnalytics } from '@/app/actions/analytics'
 import CreateLinkForm from '@/components/create-link-form'
 import PlatformSettingsForm from '@/components/platform-settings-form'
@@ -21,11 +21,12 @@ export default async function DashboardPage() {
     redirect('/sign-in')
   }
 
-  const [links, stats, settlements, settings, analytics] = await Promise.all([
+  const [links, stats, settlements, settings, config, analytics] = await Promise.all([
     getPaymentLinks(),
     getPaymentStats(),
     getPaystackSettlementSummary(),
     getPlatformSettings(),
+    getAdminConfig(),
     getDashboardAnalytics(30),
   ])
 
@@ -41,7 +42,7 @@ export default async function DashboardPage() {
         <DashboardAnalytics initialData={analytics} />
 
         <div id="payment-settings" className="mt-6 scroll-mt-6 sm:mt-8">
-          <PlatformSettingsForm initialSettings={settings} />
+          <PlatformSettingsForm initialSettings={settings} initialConfig={config} />
         </div>
 
         {/* Main Content */}
