@@ -42,6 +42,8 @@ export async function createPaymentLink(
     }
 
     const supabase = await createClient()
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    if (userError || !user) throw new Error('You must be signed in to create a payment link')
     
     // Check if path exists
     const { data: existing } = await supabase
@@ -57,6 +59,7 @@ export async function createPaymentLink(
     const { data: newLink, error } = await supabase
       .from('payment_links')
       .insert({
+        user_id: user.id,
         custom_path: customPath,
         amount_usd: amountType === 'fixed' ? amountUsd : null,
         amount_type: amountType,
@@ -69,8 +72,7 @@ export async function createPaymentLink(
 
     if (error) throw error
     const created = newLink?.[0]
-    const { data: { user } } = await supabase.auth.getUser()
-    if (created) await writeAuditLog({ actorId: user?.id, actorEmail: user?.email, action: 'payment_link.created', targetType: 'payment_link', targetId: String(created.id), targetLabel: created.custom_path, metadata: { amountType: created.amount_type, isActive: created.is_active } })
+    if (created) await writeAuditLog({ actorId: user.id, actorEmail: user.email, action: 'payment_link.created', targetType: 'payment_link', targetId: String(created.id), targetLabel: created.custom_path, metadata: { amountType: created.amount_type, isActive: created.is_active } })
     return created
   } catch (error: any) {
     console.error('[Action] Create payment link error:', error)
