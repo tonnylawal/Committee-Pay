@@ -23,8 +23,23 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
-  // This refreshes a user's auth token
-  await supabase.auth.getUser()
+  // This refreshes a user's auth token. A revoked or stale refresh token can
+  // otherwise be sent on every request and make the entire app appear broken.
+  const { error } = await supabase.auth.getUser()
+
+  if (error?.code === 'refresh_token_not_found') {
+    // The SSR client may not be able to clear the invalid token itself because
+    // the refresh request already failed. Remove Supabase auth cookies from the
+    // response so the next request starts a clean unauthenticated session.
+    for (const cookie of request.cookies.getAll()) {
+      if (
+        cookie.name.startsWith('sb-') &&
+        (cookie.name.includes('auth-token') || cookie.name.includes('code-verifier'))
+      ) {
+        supabaseResponse.cookies.delete(cookie.name)
+      }
+    }
+  }
 
   return supabaseResponse
 }
