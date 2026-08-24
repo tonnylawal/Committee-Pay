@@ -37,6 +37,11 @@ const DATE_RANGES: Array<{ value: DateRange; label: string; days?: number }> = [
   { value: '12m', label: 'Last 12 months', days: 365 },
 ]
 
+const toNumber = (value: number | string | null | undefined): number => {
+  const parsed = typeof value === 'number' ? value : Number.parseFloat(String(value ?? '0'))
+  return Number.isFinite(parsed) ? parsed : 0
+}
+
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('en-US', {
     year: 'numeric',
@@ -67,7 +72,7 @@ export default function TransactionsTable({ transactions }: TransactionsTablePro
 
   const filteredTransactions = transactions.filter((tx) => {
     const matchesStatus = filter === 'all' || tx.status === filter
-    const matchesEmail = tx.email.toLowerCase().includes(searchEmail.toLowerCase())
+    const matchesEmail = (tx.email ?? '').toLowerCase().includes(searchEmail.toLowerCase())
     const selectedRange = DATE_RANGES.find((range) => range.value === dateRange)
     const matchesDate = !selectedRange?.days || new Date(tx.created_at).getTime() >= Date.now() - selectedRange.days * 24 * 60 * 60 * 1000
     return matchesStatus && matchesEmail && matchesDate
@@ -184,7 +189,7 @@ export default function TransactionsTable({ transactions }: TransactionsTablePro
                     </td>
                     <td className="px-3 sm:px-6 py-3 sm:py-4">
                       <p className="font-semibold text-xs sm:text-sm text-slate-900">
-                        ${transaction.amount_usd.toFixed(2)}
+                        ${toNumber(transaction.amount_usd).toFixed(2)}
                       </p>
                     </td>
                     <td className="px-3 sm:px-6 py-3 sm:py-4">
