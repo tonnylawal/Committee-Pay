@@ -68,7 +68,7 @@ export default function NotFound() {
               <Link href="/sign-in" className="block text-sm text-blue-600 hover:text-blue-700 font-medium">
                 → Sign In
               </Link>
-              <a href="mailto:support@alghahim.com" className="block text-sm text-blue-600 hover:text-blue-700 font-medium">
+              <a href="mailto:support@committee.com" className="block text-sm text-blue-600 hover:text-blue-700 font-medium">
                 → Contact Support
               </a>
             </div>

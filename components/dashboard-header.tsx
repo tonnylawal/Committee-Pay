@@ -34,7 +34,7 @@ export default function DashboardHeader({ user }: DashboardHeaderProps) {
   return (
     <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 pb-4 sm:pb-6 gap-4 sm:gap-0">
       <div className="flex items-center gap-3 sm:gap-4">
-        <Image src="/logo.png" alt="Alghahim Pay" width={60} height={60} className="h-10 sm:h-14 w-auto" />
+        <Image src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-AI4NpeWalkY7W71u1pkZBkccI4LRDE.png" alt="Committee" width={60} height={60} className="h-10 sm:h-14 w-auto" />
         <div>
           <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900">Payment Links Dashboard</h1>
           <p className="text-xs sm:text-sm text-slate-600">Manage your payment links and transactions</p>

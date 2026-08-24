@@ -13,9 +13,9 @@ export default function ApiDocsPage() {
       content: (
         <div className="space-y-6">
           <div>
-            <h3 className="text-xl font-semibold text-slate-900 mb-3">Welcome to Alghahim Pay API</h3>
+            <h3 className="text-xl font-semibold text-slate-900 mb-3">Welcome to Committee API</h3>
             <p className="text-slate-700 mb-4">
-              Alghahim Pay provides a unified payment processor API for seamless integration across all your internal products. Process payments programmatically with secure API keys, manage payment links, and track transactions in real-time.
+              Committee provides a unified payment processor API for seamless integration across all your internal products. Process payments programmatically with secure API keys, manage payment links, and track transactions in real-time.
             </p>
           </div>
 
@@ -285,7 +285,7 @@ export default function ApiDocsPage() {
       content: (
         <div className="space-y-6">
           <p className="text-slate-700">
-            API keys are used to authenticate your requests to the Alghahim Pay API. Generate and manage keys from your <Link href="/dashboard/api-keys" className="text-blue-600 hover:underline">API Keys dashboard</Link>.
+            API keys are used to authenticate your requests to the Committee API. Generate and manage keys from your <Link href="/dashboard/api-keys" className="text-blue-600 hover:underline">API Keys dashboard</Link>.
           </p>
 
           <div>
@@ -529,7 +529,7 @@ print(f'Payment URL: {data["payment_url"]}')`}
             ← Back to Home
           </Link>
           <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-3 sm:mb-4">API Documentation</h1>
-          <p className="text-base sm:text-lg text-slate-600">Complete guide to integrating Alghahim Pay into your products</p>
+          <p className="text-base sm:text-lg text-slate-600">Complete guide to integrating Committee into your products</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 sm:gap-8">

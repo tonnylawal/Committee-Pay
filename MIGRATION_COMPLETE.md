@@ -2,7 +2,7 @@
 
 ## Summary
 
-Successfully migrated **Alghahim Pay** system from **Neon + Better Auth** to **Supabase** with full database setup and authentication configured.
+Successfully migrated **Committee** system from **Neon + Better Auth** to **Supabase** with full database setup and authentication configured.
 
 ---
 

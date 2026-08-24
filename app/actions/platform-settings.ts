@@ -15,7 +15,7 @@ export async function getPlatformSettings() {
   if (error) throw new Error('Failed to load platform settings')
   return data || {
     disabled_payment_message: DEFAULT_MESSAGE,
-    support_email: 'support@alghahim.com',
+    support_email: 'support@committee.com',
     theme_primary_color: '#0f766e',
     theme_background_color: '#f8fafc',
     theme_text_color: '#0f172a',

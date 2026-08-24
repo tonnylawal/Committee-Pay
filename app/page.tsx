@@ -8,8 +8,8 @@ export default function Page() {
       <nav className="sticky top-0 z-40 bg-white border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Image src="/logo.png" alt="Alghahim Pay" width={40} height={40} className="h-10 w-auto" />
-            <span className="text-xl font-bold text-slate-900">Alghahim Pay</span>
+            <Image src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-AI4NpeWalkY7W71u1pkZBkccI4LRDE.png" alt="Committee" width={40} height={40} className="h-10 w-auto" />
+            <span className="text-xl font-bold text-slate-900">Committee</span>
           </div>
           <div className="hidden sm:flex items-center gap-8">
             <a href="#features" className="text-sm text-slate-600 hover:text-slate-900 transition">Features</a>
@@ -202,7 +202,7 @@ export default function Page() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl sm:text-4xl font-bold mb-6">Ready to Get Started?</h2>
           <p className="text-lg text-slate-300 mb-8 max-w-2xl mx-auto">
-            Join teams across your organization who are already using Alghahim Pay for seamless, reliable payment processing.
+            Join teams across your organization who are already using Committee for seamless, reliable payment processing.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
@@ -227,8 +227,8 @@ export default function Page() {
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <Image src="/logo.png" alt="Alghahim Pay" width={32} height={32} className="h-8 w-auto" />
-                <span className="font-bold text-slate-900">Alghahim Pay</span>
+                <Image src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-AI4NpeWalkY7W71u1pkZBkccI4LRDE.png" alt="Committee" width={32} height={32} className="h-8 w-auto" />
+                <span className="font-bold text-slate-900">Committee</span>
               </div>
               <p className="text-sm text-slate-600">Unified payment processing for your products.</p>
             </div>
@@ -261,7 +261,7 @@ export default function Page() {
           
           <div className="border-t border-slate-200 pt-8">
             <p className="text-sm text-slate-600 text-center">
-              © 2024 Alghahim Pay. All rights reserved.
+              © 2024 Committee. All rights reserved.
             </p>
           </div>
         </div>

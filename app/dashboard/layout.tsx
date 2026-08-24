@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import DashboardSidebar from '@/components/dashboard-sidebar'
 
 export const metadata = {
-  title: 'Dashboard | Alghahim Pay',
+  title: 'Dashboard | Committee',
   description: 'Manage your payment links and transactions',
 }
 

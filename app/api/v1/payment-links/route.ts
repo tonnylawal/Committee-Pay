@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
         amount_usd: data.amount_usd,
         amount_type: data.amount_type,
         description: data.description,
-        payment_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://alghahim.pay'}/pay/${data.custom_path}`,
+        payment_url: `${process.env.NEXT_PUBLIC_BASE_URL || new URL(request.url).origin}/pay/${data.custom_path}`,
         created_at: data.created_at,
         expires_at: data.expires_at,
       },
