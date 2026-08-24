@@ -185,7 +185,7 @@ export async function getPaymentsByLinkId(linkId: number) {
     const { data, error } = await supabase
       .from('payments')
       .select('*')
-      .eq('link_id', linkId)
+      .eq('payment_link_id', linkId)
       .order('created_at', { ascending: false })
 
     if (error) throw error

@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
     const { data: link, error: linkError } = await supabase
       .from('payment_links')
-      .select('id, custom_path, is_active, amount_type, amount_usd, minimum_amount_usd, api_key_id')
+      .select('id, user_id, custom_path, is_active, amount_type, amount_usd, minimum_amount_usd, api_key_id')
       .eq('custom_path', customPath)
       .eq('api_key_id', apiKey.id)
       .maybeSingle()
@@ -58,14 +58,18 @@ export async function POST(request: NextRequest) {
     }
 
     const { error: insertError } = await supabase.from('payments').insert({
-      link_id: link.id,
-      reference_id: reference,
-      amount_kes: amountKes,
-      amount_usd: amount,
+      user_id: link.user_id,
+      payment_link_id: link.id,
+      reference,
+      amount_kes: String(amountKes),
+      amount_usd: String(amount),
       status: 'pending',
-      customer_email: email,
+      email,
     })
-    if (insertError) console.error('[API] Failed to record payment:', insertError)
+    if (insertError) {
+      console.error('[API] Failed to record payment:', insertError)
+      return NextResponse.json({ error: 'Failed to record payment' }, { status: 500 })
+    }
 
     return NextResponse.json({
       data: {

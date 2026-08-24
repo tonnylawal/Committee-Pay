@@ -75,20 +75,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to initialize payment' }, { status: 500 })
     }
 
-    // Record payment in database
+    // Record the pending payment using the live schema. Do this before
+    // returning the authorization URL so dashboard reporting is reliable.
     const { error: insertError } = await supabase
       .from('payments')
       .insert({
-        link_id: paymentLink.id,
-        reference_id: reference,
-        amount_kes: amountKes,
-        amount_usd: amount,
+        user_id: paymentLink.user_id,
+        payment_link_id: paymentLink.id,
+        reference,
+        amount_kes: String(amountKes),
+        amount_usd: String(amount),
         status: 'pending',
-        customer_email: email,
+        email,
       })
 
     if (insertError) {
       console.error('[API] Failed to record payment:', insertError)
+      return NextResponse.json({ error: 'Failed to record payment' }, { status: 500 })
     }
 
     return NextResponse.json({

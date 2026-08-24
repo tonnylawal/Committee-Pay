@@ -7,7 +7,7 @@ export type PaymentStatus = 'pending' | 'completed' | 'failed'
 
 type PaymentRecord = {
   id: number
-  reference_id: string
+  reference: string
   status: PaymentStatus
 }
 
@@ -56,11 +56,11 @@ async function persistVerifiedStatus(
     .eq('id', payment.id)
 
   if (error) {
-    throw new Error(`Failed to update payment ${payment.reference_id}: ${error.message}`)
+    throw new Error(`Failed to update payment ${payment.reference}: ${error.message}`)
   }
 
   console.log('[v0] Reconciled payment status:', {
-    reference: payment.reference_id,
+    reference: payment.reference,
     previousStatus: payment.status,
     status,
     paystackStatus: verification.data.status,
@@ -73,8 +73,8 @@ export async function reconcilePaymentReference(reference: string) {
   const supabase = getServiceRoleClient()
   const { data: payment, error: fetchError } = await supabase
     .from('payments')
-    .select('id, reference_id, status')
-    .eq('reference_id', reference)
+    .select('id, reference, status')
+    .eq('reference', reference)
     .maybeSingle()
 
   if (fetchError) throw fetchError
@@ -90,9 +90,9 @@ export async function reconcilePendingPayments(limit = 25) {
   const supabase = getServiceRoleClient()
   const { data: payments, error } = await supabase
     .from('payments')
-    .select('id, reference_id, status')
+    .select('id, reference, status')
     .eq('status', 'pending')
-    .not('reference_id', 'is', null)
+    .not('reference', 'is', null)
     .order('created_at', { ascending: false })
     .limit(limit)
 
@@ -100,7 +100,7 @@ export async function reconcilePendingPayments(limit = 25) {
 
   const results = await Promise.allSettled(
     (payments || []).map(async (payment) => {
-      const verification = await verifyPaystackTransaction(payment.reference_id)
+      const verification = await verifyPaystackTransaction(payment.reference)
       return persistVerifiedStatus(supabase, payment, verification)
     }),
   )
@@ -118,8 +118,8 @@ export async function applyWebhookPaymentStatus(reference: string, paystackStatu
   const status = normalizePaystackStatus(paystackStatus)
   const { data: payment, error: fetchError } = await supabase
     .from('payments')
-    .select('id, reference_id, status')
-    .eq('reference_id', reference)
+    .select('id, reference, status')
+    .eq('reference', reference)
     .maybeSingle()
 
   if (fetchError) throw fetchError

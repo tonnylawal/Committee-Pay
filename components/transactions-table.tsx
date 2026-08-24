@@ -4,10 +4,10 @@ import { useState } from 'react'
 
 interface Transaction {
   id: string
-  reference_id: string
-  amount_usd: number
-  amount_kes: number
-  customer_email: string
+  reference: string
+  amount_usd: number | string
+  amount_kes: number | string
+  email: string
   status: 'pending' | 'completed' | 'failed'
   transaction_id?: string
   created_at: string
@@ -67,7 +67,7 @@ export default function TransactionsTable({ transactions }: TransactionsTablePro
 
   const filteredTransactions = transactions.filter((tx) => {
     const matchesStatus = filter === 'all' || tx.status === filter
-    const matchesEmail = tx.customer_email.toLowerCase().includes(searchEmail.toLowerCase())
+    const matchesEmail = tx.email.toLowerCase().includes(searchEmail.toLowerCase())
     const selectedRange = DATE_RANGES.find((range) => range.value === dateRange)
     const matchesDate = !selectedRange?.days || new Date(tx.created_at).getTime() >= Date.now() - selectedRange.days * 24 * 60 * 60 * 1000
     return matchesStatus && matchesEmail && matchesDate
@@ -173,7 +173,7 @@ export default function TransactionsTable({ transactions }: TransactionsTablePro
                     <td className="px-3 sm:px-6 py-3 sm:py-4">
                       <div>
                         <p className="font-medium text-xs sm:text-sm text-slate-900 break-all">
-                          {transaction.customer_email}
+                          {transaction.email}
                         </p>
                         {transaction.payment_links?.custom_path && (
                           <p className="text-xs text-slate-500 mt-1">
@@ -203,7 +203,7 @@ export default function TransactionsTable({ transactions }: TransactionsTablePro
                     </td>
                     <td className="px-3 sm:px-6 py-3 sm:py-4 hidden md:table-cell">
                       <p className="text-xs text-slate-600 break-all font-mono">
-                        {transaction.reference_id}
+                        {transaction.reference}
                       </p>
                     </td>
                     <td className="px-3 sm:px-6 py-3 sm:py-4">
