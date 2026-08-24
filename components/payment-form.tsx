@@ -95,7 +95,7 @@ export default function PaymentForm({ link, theme }: PaymentFormProps) {
         finalAmount = link.amount_usd || 0
       } else {
         finalAmount = parseFloat(amountUsd)
-        const minAmount = link.minimum_amount_usd || 20
+        const minAmount = Number(link.minimum_amount_usd ?? 20)
         if (!finalAmount || finalAmount < minAmount) {
           throw new Error(`Minimum amount is $${minAmount.toFixed(2)}`)
         }
@@ -208,7 +208,7 @@ export default function PaymentForm({ link, theme }: PaymentFormProps) {
       <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
         {(() => {
           const amountType = link.amount_type || (link.is_flexible_amount ? 'flexible' : 'fixed')
-          const minAmount = link.minimum_amount_usd || 20
+          const minAmount = Number(link.minimum_amount_usd ?? 20)
 
           if (amountType === 'fixed') {
             return (
@@ -218,7 +218,7 @@ export default function PaymentForm({ link, theme }: PaymentFormProps) {
                   <span className="absolute left-3 sm:left-4 top-2 sm:top-3 text-slate-900 font-semibold">$</span>
                   <input
                     type="text"
-                    value={link.amount_usd?.toFixed(2)}
+                    value={Number(link.amount_usd ?? 0).toFixed(2)}
                     disabled
                     className="w-full pl-7 sm:pl-8 pr-3 sm:pr-4 py-2 sm:py-3 border border-slate-300 rounded-md text-slate-900 bg-slate-50 font-semibold text-base sm:text-lg"
                   />
@@ -283,7 +283,7 @@ export default function PaymentForm({ link, theme }: PaymentFormProps) {
             const amountType = link.amount_type || (link.is_flexible_amount ? 'flexible' : 'fixed')
             if (loading) return 'Processing...'
             if (amountType === 'fixed') {
-              return `Pay $${link.amount_usd?.toFixed(2)}`
+              return `Pay $${Number(link.amount_usd ?? 0).toFixed(2)}`
             }
             return amountUsd ? `Pay $${parseFloat(amountUsd).toFixed(2)}` : 'Enter amount to continue'
           })()}
