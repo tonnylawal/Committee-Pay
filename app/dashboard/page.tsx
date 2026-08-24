@@ -21,13 +21,51 @@ export default async function DashboardPage() {
     redirect('/sign-in')
   }
 
+  const defaultSettings = {
+    disabled_payment_message: 'Our systems are currently down and we might not be able to process your payment. Please contact support for an alternative payment method.',
+    support_email: 'support@committee.com',
+    theme_primary_color: '#0f766e',
+    theme_background_color: '#f8fafc',
+    theme_text_color: '#0f172a',
+    theme_accent_color: '#14b8a6',
+  }
+  const defaultStats = {
+    total: 0,
+    completed: 0,
+    pending: 0,
+    failed: 0,
+    completedAmountUsd: 0,
+    completedAmountKes: 0,
+    failedAmountUsd: 0,
+    failedAmountKes: 0,
+  }
+  const defaultAnalytics = { rangeDays: 30, trend: [], status: [] }
+
   const [links, stats, settlements, settings, config, analytics] = await Promise.all([
-    getPaymentLinks(),
-    getPaymentStats(),
-    getPaystackSettlementSummary(),
-    getPlatformSettings(),
-    getAdminConfig(),
-    getDashboardAnalytics(30),
+    getPaymentLinks().catch((error) => {
+      console.error('[v0] Dashboard payment links failed:', error)
+      return []
+    }),
+    getPaymentStats().catch((error) => {
+      console.error('[v0] Dashboard payment stats failed:', error)
+      return defaultStats
+    }),
+    getPaystackSettlementSummary().catch((error) => {
+      console.error('[v0] Dashboard settlement summary failed:', error)
+      return { settledAmountKes: 0, pendingAmountKes: 0 }
+    }),
+    getPlatformSettings().catch((error) => {
+      console.error('[v0] Dashboard platform settings failed:', error)
+      return defaultSettings
+    }),
+    getAdminConfig().catch((error) => {
+      console.error('[v0] Dashboard secure configuration failed:', error)
+      return []
+    }),
+    getDashboardAnalytics(30).catch((error) => {
+      console.error('[v0] Dashboard analytics failed:', error)
+      return defaultAnalytics
+    }),
   ])
 
   return (
