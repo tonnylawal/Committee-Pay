@@ -70,7 +70,7 @@ export default function DashboardSidebar() {
     <aside className="w-64 bg-slate-900 text-white p-6 min-h-screen sticky top-0 hidden md:block">
       {/* Logo */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white">Alghahim</h1>
+        <h1 className="text-2xl font-bold text-white">Committee</h1>
         <p className="text-xs text-slate-400">Payment Dashboard</p>
       </div>
 

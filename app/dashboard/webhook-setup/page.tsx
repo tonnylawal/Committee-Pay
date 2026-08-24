@@ -15,7 +15,7 @@ export default function WebhookSetupPage() {
           <section className="mb-6 sm:mb-8 pb-6 sm:pb-8 border-b border-slate-200">
             <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-slate-900 mb-3 sm:mb-4">Overview</h2>
             <p className="text-xs sm:text-sm md:text-base text-slate-600 mb-3 sm:mb-4">
-              Webhooks allow Paystack to automatically notify your Alghahim Pay system when a payment is completed, failed, or cancelled. This enables real-time transaction updates without polling.
+              Webhooks allow Paystack to automatically notify your Committee system when a payment is completed, failed, or cancelled. This enables real-time transaction updates without polling.
             </p>
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
               <p className="text-xs sm:text-sm text-blue-900 break-all">

@@ -4,16 +4,16 @@ import SessionTimeoutProvider from '@/components/session-timeout-provider'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Alghahim Pay - Payment Link Management',
+  title: 'Committee - Payment Link Management',
   description: 'Create and manage custom payment links with USD display and KES checkout via Paystack',
   icons: {
-    icon: '/favicon.ico',
-    apple: '/logo.png',
+    icon: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-AI4NpeWalkY7W71u1pkZBkccI4LRDE.png',
+    apple: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-AI4NpeWalkY7W71u1pkZBkccI4LRDE.png',
   },
   openGraph: {
-    title: 'Alghahim Pay',
+    title: 'Committee',
     description: 'Secure payment links that pay and grow your business',
-    images: ['/logo.png'],
+    images: ['https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-AI4NpeWalkY7W71u1pkZBkccI4LRDE.png'],
   },
 }
 

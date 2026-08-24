@@ -5,7 +5,7 @@ import { Lock, Home, Calendar } from 'lucide-react'
 
 export default function PaymentInactivePage({ message, supportEmail }: { message?: string; supportEmail?: string }) {
   const outageMessage = message || 'Our systems are currently down and we might not be able to process your payment. Please contact support for an alternative payment method.'
-  const email = supportEmail || 'support@alghahim.com'
+  const email = supportEmail || 'support@committee.com'
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-amber-50 via-white to-slate-50 flex items-center justify-center p-4">
