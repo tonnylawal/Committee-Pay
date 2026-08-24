@@ -25,6 +25,11 @@ interface PaymentLinksTableProps {
   links: PaymentLink[]
 }
 
+const toNumber = (value: number | string | null | undefined): number => {
+  const parsed = typeof value === 'number' ? value : Number.parseFloat(String(value ?? '0'))
+  return Number.isFinite(parsed) ? parsed : 0
+}
+
 export default function PaymentLinksTable({ links }: PaymentLinksTableProps) {
   const [selectedLink, setSelectedLink] = useState<PaymentLink | null>(null)
   const [showModal, setShowModal] = useState(false)
@@ -132,14 +137,14 @@ export default function PaymentLinksTable({ links }: PaymentLinksTableProps) {
                         return (
                           <div>
                             <span className="inline-block px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded mb-1">Fixed</span>
-                            <p className="font-semibold text-xs sm:text-sm text-slate-900">${link.amount_usd?.toFixed(2)}</p>
+                            <p className="font-semibold text-xs sm:text-sm text-slate-900">${toNumber(link.amount_usd).toFixed(2)}</p>
                           </div>
                         )
                       } else {
                         return (
                           <div>
                             <span className="inline-block px-2 py-1 text-xs font-medium bg-purple-100 text-purple-800 rounded mb-1">Flexible</span>
-                            <p className="text-xs text-slate-600">Min: ${(link.minimum_amount_usd || 20).toFixed(2)}</p>
+                            <p className="text-xs text-slate-600">Min: ${toNumber(link.minimum_amount_usd || 20).toFixed(2)}</p>
                           </div>
                         )
                       }
