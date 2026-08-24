@@ -56,15 +56,20 @@ export async function createPaymentLink(
       throw new Error('This custom path already exists')
     }
 
+    const normalizedPath = customPath.trim()
+    const normalizedDescription = description?.trim() || null
+    const linkName = normalizedDescription || normalizedPath
+
     const { data: newLink, error } = await supabase
       .from('payment_links')
       .insert({
         user_id: user.id,
-        custom_path: customPath,
+        name: linkName,
+        custom_path: normalizedPath,
         amount_usd: amountType === 'fixed' ? amountUsd : null,
         amount_type: amountType,
         minimum_amount_usd: amountType === 'flexible' ? minimumAmount : null,
-        description: description || null,
+        description: normalizedDescription,
         is_flexible_amount: amountType === 'flexible',
         is_active: true,
       })
