@@ -46,19 +46,23 @@ export async function createPaymentLink(
     if (userError || !user) throw new Error('You must be signed in to create a payment link')
     
     // Check if path exists
+    const normalizedPath = customPath.trim()
+    const normalizedDescription = description?.trim() || null
+    const linkName = normalizedDescription || normalizedPath
+
+    // The existing schema requires amount_usd to be non-null. For flexible links,
+    // store the minimum as the base amount while preserving the amount type.
+    const baseAmountUsd = amountType === 'fixed' ? amountUsd : minimumAmount
+
     const { data: existing } = await supabase
       .from('payment_links')
       .select('*')
-      .eq('custom_path', customPath)
+      .eq('custom_path', normalizedPath)
       .limit(1)
 
     if (existing && existing.length > 0) {
       throw new Error('This custom path already exists')
     }
-
-    const normalizedPath = customPath.trim()
-    const normalizedDescription = description?.trim() || null
-    const linkName = normalizedDescription || normalizedPath
 
     const { data: newLink, error } = await supabase
       .from('payment_links')
@@ -66,7 +70,7 @@ export async function createPaymentLink(
         user_id: user.id,
         name: linkName,
         custom_path: normalizedPath,
-        amount_usd: amountType === 'fixed' ? amountUsd : null,
+        amount_usd: baseAmountUsd,
         amount_type: amountType,
         minimum_amount_usd: amountType === 'flexible' ? minimumAmount : null,
         description: normalizedDescription,
