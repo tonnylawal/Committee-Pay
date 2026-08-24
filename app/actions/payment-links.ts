@@ -42,12 +42,22 @@ export async function createPaymentLink(
     }
 
     const supabase = await createClient()
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    if (userError || !user) throw new Error('You must be signed in to create a payment link')
     
     // Check if path exists
+    const normalizedPath = customPath.trim()
+    const normalizedDescription = description?.trim() || null
+    const linkName = normalizedDescription || normalizedPath
+
+    // The existing schema requires amount_usd to be non-null. For flexible links,
+    // store the minimum as the base amount while preserving the amount type.
+    const baseAmountUsd = amountType === 'fixed' ? amountUsd : minimumAmount
+
     const { data: existing } = await supabase
       .from('payment_links')
       .select('*')
-      .eq('custom_path', customPath)
+      .eq('custom_path', normalizedPath)
       .limit(1)
 
     if (existing && existing.length > 0) {
@@ -57,11 +67,13 @@ export async function createPaymentLink(
     const { data: newLink, error } = await supabase
       .from('payment_links')
       .insert({
-        custom_path: customPath,
-        amount_usd: amountType === 'fixed' ? amountUsd : null,
+        user_id: user.id,
+        name: linkName,
+        custom_path: normalizedPath,
+        amount_usd: baseAmountUsd,
         amount_type: amountType,
         minimum_amount_usd: amountType === 'flexible' ? minimumAmount : null,
-        description: description || null,
+        description: normalizedDescription,
         is_flexible_amount: amountType === 'flexible',
         is_active: true,
       })
@@ -69,8 +81,7 @@ export async function createPaymentLink(
 
     if (error) throw error
     const created = newLink?.[0]
-    const { data: { user } } = await supabase.auth.getUser()
-    if (created) await writeAuditLog({ actorId: user?.id, actorEmail: user?.email, action: 'payment_link.created', targetType: 'payment_link', targetId: String(created.id), targetLabel: created.custom_path, metadata: { amountType: created.amount_type, isActive: created.is_active } })
+    if (created) await writeAuditLog({ actorId: user.id, actorEmail: user.email, action: 'payment_link.created', targetType: 'payment_link', targetId: String(created.id), targetLabel: created.custom_path, metadata: { amountType: created.amount_type, isActive: created.is_active } })
     return created
   } catch (error: any) {
     console.error('[Action] Create payment link error:', error)
