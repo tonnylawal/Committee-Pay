@@ -1,6 +1,14 @@
 'use server'
 
+import { createClient as createServiceRoleClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
+
+function getAdminDataClient() {
+  return createServiceRoleClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  )
+}
 import { writeAuditLog } from '@/lib/audit-log'
 
 const HEX_COLOR = /^#[0-9a-fA-F]{6}$/
@@ -199,7 +207,19 @@ export async function getPaymentsByLinkId(linkId: number) {
 export async function getPaymentStats() {
   try {
     const supabase = await createClient()
-    const { data: allPayments, error } = await supabase
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('Unauthorized')
+
+    const { data: profile, error: profileError } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .maybeSingle()
+    if (profileError) throw profileError
+    if (profile?.role !== 'admin') throw new Error('Forbidden')
+
+    const adminSupabase = getAdminDataClient()
+    const { data: allPayments, error } = await adminSupabase
       .from('payments')
       .select('*')
 

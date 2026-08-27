@@ -1,6 +1,14 @@
 'use server'
 
+import { createClient as createServiceRoleClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
+
+function getAdminDataClient() {
+  return createServiceRoleClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  )
+}
 
 export type DashboardAnalytics = {
   rangeDays: number
@@ -12,7 +20,19 @@ export async function getDashboardAnalytics(rangeDays = 30): Promise<DashboardAn
   const days = Math.min(Math.max(Math.floor(rangeDays), 1), 365)
   const start = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString()
   const supabase = await createClient()
-  const { data, error } = await supabase
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Unauthorized')
+
+  const { data: profile, error: profileError } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .maybeSingle()
+  if (profileError) throw profileError
+  if (profile?.role !== 'admin') throw new Error('Forbidden')
+
+  const adminSupabase = getAdminDataClient()
+  const { data, error } = await adminSupabase
     .from('payments')
     .select('status, amount_usd, amount_kes, created_at')
     .gte('created_at', start)
