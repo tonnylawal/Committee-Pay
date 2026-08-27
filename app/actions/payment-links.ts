@@ -4,10 +4,16 @@ import { createClient as createServiceRoleClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 
 function getAdminDataClient() {
-  return createServiceRoleClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  )
+  const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseSecretKey = process.env.SUPABASE_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY
+
+  if (!supabaseUrl || !supabaseSecretKey) {
+    throw new Error('Supabase server credentials are not configured')
+  }
+
+  return createServiceRoleClient(supabaseUrl, supabaseSecretKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  })
 }
 import { writeAuditLog } from '@/lib/audit-log'
 
@@ -210,15 +216,17 @@ export async function getPaymentStats() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) throw new Error('Unauthorized')
 
-    const { data: profile, error: profileError } = await supabase
+    // The public users table is RLS-protected, so use the server-only client
+    // for the authorization lookup as well as the reporting query.
+    const adminSupabase = getAdminDataClient()
+    const { data: profile, error: profileError } = await adminSupabase
       .from('users')
-      .select('role')
+      .select('role, is_active')
       .eq('id', user.id)
       .maybeSingle()
     if (profileError) throw profileError
-    if (profile?.role !== 'admin') throw new Error('Forbidden')
+    if (profile?.role !== 'admin' || profile.is_active === false) throw new Error('Forbidden')
 
-    const adminSupabase = getAdminDataClient()
     const { data: allPayments, error } = await adminSupabase
       .from('payments')
       .select('*')
