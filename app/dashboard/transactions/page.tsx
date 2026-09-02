@@ -1,14 +1,37 @@
 import { redirect } from 'next/navigation'
+import { createClient as createServiceRoleClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { reconcilePendingPayments } from '@/lib/paystack-payment-status'
 import TransactionsTable from '@/components/transactions-table'
 
-async function getTransactions() {
+function getAdminDataClient() {
+  const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseSecretKey = process.env.SUPABASE_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY
+
+  if (!supabaseUrl || !supabaseSecretKey) {
+    throw new Error('Supabase server credentials are not configured')
+  }
+
+  return createServiceRoleClient(supabaseUrl, supabaseSecretKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  })
+}
+
+async function getTransactions(userId: string) {
   try {
     await reconcilePendingPayments(25)
 
-    const supabase = await createClient()
-    const { data, error } = await supabase
+    const adminSupabase = getAdminDataClient()
+    const { data: profile, error: profileError } = await adminSupabase
+      .from('users')
+      .select('role, is_active')
+      .eq('id', userId)
+      .maybeSingle()
+
+    if (profileError) throw profileError
+    if (profile?.role !== 'admin' || profile.is_active === false) throw new Error('Forbidden')
+
+    const { data, error } = await adminSupabase
       .from('payments')
       .select('*, payment_links(custom_path, description)')
       .order('created_at', { ascending: false })
@@ -31,7 +54,7 @@ export default async function TransactionsPage() {
     redirect('/sign-in')
   }
 
-  const transactions = await getTransactions()
+  const transactions = await getTransactions(user.id)
 
   return (
     <div className="p-4 sm:p-6 md:p-8">
